@@ -9,7 +9,37 @@ class Order {
         .populate("user", "name email")
         .sort({ _id: -1 });
       if (Orders) {
-        return res.json({ Orders });
+        const totalOrders = Orders.length;
+
+        const deliveredOrders = Orders.filter(
+          (item) => item.status === "Delivered",
+        ).length;
+
+        const shippedOrders = Orders.filter(
+          (item) => item.status === "Shipped",
+        ).length;
+
+        const cancelledOrders = Orders.filter(
+          (item) => item.status === "Cancelled",
+        ).length;
+
+        const processingOrders = Orders.filter(
+          (item) => item.status === "Processing",
+        ).length;
+
+        return res.json({
+          Orders,
+
+          totalOrders,
+
+          deliveredOrders,
+
+          shippedOrders,
+
+          cancelledOrders,
+
+          processingOrders,
+        });
       }
     } catch (err) {
       console.log(err);
@@ -37,7 +67,18 @@ class Order {
   }
 
   async postCreateOrder(req, res) {
-    let { allProduct, user, amount, transactionId, address, phone } = req.body;
+
+  try {
+
+    const {
+      allProduct,
+      user,
+      amount,
+      transactionId,
+      address,
+      phone,
+    } = req.body;
+
     if (
       !allProduct ||
       !user ||
@@ -46,26 +87,44 @@ class Order {
       !address ||
       !phone
     ) {
-      return res.json({ message: "All filled must be required" });
-    } else {
-      try {
-        let newOrder = new orderModel({
-          allProduct,
-          user,
-          amount,
-          transactionId,
-          address,
-          phone,
-        });
-        let save = await newOrder.save();
-        if (save) {
-          return res.json({ success: "Order created successfully" });
-        }
-      } catch (err) {
-        return res.json({ error: error });
-      }
+
+      return res.json({
+        success: false,
+        message: "All fields required",
+      });
+
     }
+
+    const newOrder = new orderModel({
+      allProduct,
+      user,
+      amount,
+      transactionId,
+      address,
+      phone,
+    });
+
+    const savedOrder =
+      await newOrder.save();
+
+    return res.json({
+      success: true,
+      message: "Order placed successfully",
+      order: savedOrder,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.json({
+      success: false,
+      error: "Order failed",
+    });
+
   }
+
+}
 
   async postUpdateOrder(req, res) {
     let { oId, status } = req.body;
@@ -78,7 +137,10 @@ class Order {
       });
       currentOrder.exec((err, result) => {
         if (err) console.log(err);
-        return res.json({ success: "Order updated successfully" });
+        return res.json({
+          success: true,
+          message: "Order updated successfully",
+        });
       });
     }
   }

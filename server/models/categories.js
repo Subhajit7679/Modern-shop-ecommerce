@@ -6,20 +6,25 @@ const categorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
     cDescription: {
       type: String,
-      required: true,
+      default: "",
     },
+
     cImage: {
       type: String,
+      default: "default.png",
     },
+
     cStatus: {
       type: String,
-      required: true,
+      default: "Active",
     },
   },
   { timestamps: true }
 );
 
 const categoryModel = mongoose.model("categories", categorySchema);
+
 module.exports = categoryModel;

@@ -1,31 +1,75 @@
 const express = require("express");
 const router = express.Router();
-const productController = require("../controller/products");
+
 const multer = require("multer");
 
-var storage = multer.diskStorage({
+const productController = require("../controller/products");
+
+const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "public/uploads/products");
   },
+
   filename: function (req, file, cb) {
     cb(null, Date.now() + "_" + file.originalname);
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
+/* GET ALL PRODUCTS */
 router.get("/all-product", productController.getAllProduct);
-router.post("/product-by-category", productController.getProductByCategory);
-router.post("/product-by-price", productController.getProductByPrice);
-router.post("/wish-product", productController.getWishProduct);
-router.post("/cart-product", productController.getCartProduct);
 
-router.post("/add-product", upload.any(), productController.postAddProduct);
-router.post("/edit-product", upload.any(), productController.postEditProduct);
-router.post("/delete-product", productController.getDeleteProduct);
-router.post("/single-product", productController.getSingleProduct);
+/* GET SINGLE PRODUCT */
+router.get("/single-product/:id", async (req, res) => {
+  req.body.pId = req.params.id;
 
-router.post("/add-review", productController.postAddReview);
-router.post("/delete-review", productController.deleteReview);
+  return productController.getSingleProduct(req, res);
+});
+
+/* ADD PRODUCT */
+router.post(
+  "/add-product",
+  upload.single("pImage"),
+  productController.postAddProduct,
+);
+
+router.get(
+  "/product-count",
+  productController.productCount
+);
+
+/* EDIT PRODUCT */
+router.put(
+  "/edit-product/:id",
+  upload.array("pImages", 2),
+  async (req, res) => {
+    req.body.pId = req.params.id;
+
+    return productController.postEditProduct(req, res);
+  },
+);
+
+/* DELETE PRODUCT */
+router.delete("/delete-product/:id", async (req, res) => {
+  req.body.pId = req.params.id;
+
+  return productController.getDeleteProduct(req, res);
+});
+
+
+router.post(
+  "/filter-products",
+  productController.filterProducts
+);
+
+
+
+router.get(
+  "/paginate-products",
+  productController.paginateProducts
+);
+
+router.get("/search", productController.searchProduct);
 
 module.exports = router;

@@ -6,53 +6,47 @@ class Category {
   async getAllCategory(req, res) {
     try {
       let Categories = await categoryModel.find({}).sort({ _id: -1 });
+
       if (Categories) {
-        return res.json({ Categories });
+        return res.json({
+          categories: Categories,
+        });
       }
     } catch (err) {
       console.log(err);
     }
   }
-
   async postAddCategory(req, res) {
-    let { cName, cDescription, cStatus } = req.body;
-    let cImage = req.file.filename;
-    const filePath = `../server/public/uploads/categories/${cImage}`;
+    try {
+      console.log(req.body);
 
-    if (!cName || !cDescription || !cStatus || !cImage) {
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.log(err);
-        }
-        return res.json({ error: "All filled must be required" });
-      });
-    } else {
-      cName = toTitleCase(cName);
-      try {
-        let checkCategoryExists = await categoryModel.findOne({ cName: cName });
-        if (checkCategoryExists) {
-          fs.unlink(filePath, (err) => {
-            if (err) {
-              console.log(err);
-            }
-            return res.json({ error: "Category already exists" });
-          });
-        } else {
-          let newCategory = new categoryModel({
-            cName,
-            cDescription,
-            cStatus,
-            cImage,
-          });
-          await newCategory.save((err) => {
-            if (!err) {
-              return res.json({ success: "Category created successfully" });
-            }
-          });
-        }
-      } catch (err) {
-        console.log(err);
+      let { cName } = req.body;
+
+      if (!cName) {
+        return res.json({
+          error: "Category name is required",
+        });
       }
+
+      const newCategory = new categoryModel({
+        cName,
+      });
+
+      console.log(newCategory);
+
+      await newCategory.save();
+
+      console.log("CATEGORY SAVED");
+
+      return res.json({
+        success: "Category created successfully",
+      });
+    } catch (err) {
+      console.log("SAVE ERROR:", err);
+
+      return res.json({
+        error: "Something went wrong",
+      });
     }
   }
 
@@ -87,7 +81,7 @@ class Category {
 
         let deleteCategory = await categoryModel.findByIdAndDelete(cId);
         if (deleteCategory) {
-          // Delete Image from uploads -> categories folder 
+          // Delete Image from uploads -> categories folder
           fs.unlink(filePath, (err) => {
             if (err) {
               console.log(err);

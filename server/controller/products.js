@@ -27,6 +27,23 @@ class Product {
     }
   }
 
+  async productCount(req, res) {
+    try {
+      const totalProducts = await productModel.countDocuments();
+
+      return res.json({
+        success: true,
+        totalProducts,
+      });
+    } catch (err) {
+      console.log(err);
+
+      return res.status(500).json({
+        success: false,
+      });
+    }
+  }
+
   async getAllProduct(req, res) {
     try {
       let Products = await productModel
@@ -34,7 +51,9 @@ class Product {
         .populate("pCategory", "_id cName")
         .sort({ _id: -1 });
       if (Products) {
-        return res.json({ Products });
+        return res.json({
+          products: Products,
+        });
       }
     } catch (err) {
       console.log(err);
@@ -42,56 +61,45 @@ class Product {
   }
 
   async postAddProduct(req, res) {
-    let { pName, pDescription, pPrice, pQuantity, pCategory, pOffer, pStatus } =
-      req.body;
-    let images = req.files;
-    // Validation
-    if (
-      !pName |
-      !pDescription |
-      !pPrice |
-      !pQuantity |
-      !pCategory |
-      !pOffer |
-      !pStatus
-    ) {
-      Product.deleteImages(images, "file");
-      return res.json({ error: "All filled must be required" });
-    }
-    // Validate Name and description
-    else if (pName.length > 255 || pDescription.length > 3000) {
-      Product.deleteImages(images, "file");
-      return res.json({
-        error: "Name 255 & Description must not be 3000 charecter long",
-      });
-    }
-    // Validate Images
-    else if (images.length !== 2) {
-      Product.deleteImages(images, "file");
-      return res.json({ error: "Must need to provide 2 images" });
-    } else {
-      try {
-        let allImages = [];
-        for (const img of images) {
-          allImages.push(img.filename);
-        }
-        let newProduct = new productModel({
-          pImages: allImages,
-          pName,
-          pDescription,
-          pPrice,
-          pQuantity,
-          pCategory,
-          pOffer,
-          pStatus,
+    try {
+      console.log(req.body);
+
+      let { pName, pDescription, pPrice, pCategory } = req.body;
+
+      let pImage = req.file ? req.file.filename : "default.png";
+
+      if (!pName || !pDescription || !pPrice || !pCategory) {
+        return res.json({
+          error: "All fields required",
         });
-        let save = await newProduct.save();
-        if (save) {
-          return res.json({ success: "Product created successfully" });
-        }
-      } catch (err) {
-        console.log(err);
       }
+
+      const newProduct = new productModel({
+        pName,
+        pDescription,
+        pPrice,
+        pCategory,
+
+        pQuantity: 1,
+        pOffer: "No",
+        pStatus: "Active",
+
+        pImages: [pImage],
+      });
+
+      await newProduct.save();
+
+      console.log("PRODUCT SAVED");
+
+      return res.json({
+        success: "Product created successfully",
+      });
+    } catch (err) {
+      console.log(err);
+
+      return res.json({
+        error: "Product save failed",
+      });
     }
   }
 
@@ -192,7 +200,9 @@ class Product {
           .populate("pCategory", "cName")
           .populate("pRatingsReviews.user", "name email userImage");
         if (singleProduct) {
-          return res.json({ Product: singleProduct });
+          return res.json({
+            product: singleProduct,
+          });
         }
       } catch (err) {
         console.log(err);
@@ -210,7 +220,7 @@ class Product {
           .find({ pCategory: catId })
           .populate("pCategory", "cName");
         if (products) {
-          return res.json({ Products: products });
+          return res.json({ products: products });
         }
       } catch (err) {
         return res.json({ error: "Search product wrong" });
@@ -229,7 +239,7 @@ class Product {
           .populate("pCategory", "cName")
           .sort({ pPrice: -1 });
         if (products) {
-          return res.json({ Products: products });
+          return res.json({ products: products });
         }
       } catch (err) {
         return res.json({ error: "Filter product wrong" });
@@ -247,7 +257,7 @@ class Product {
           _id: { $in: productArray },
         });
         if (wishProducts) {
-          return res.json({ Products: wishProducts });
+          return res.json({ products: wishProducts });
         }
       } catch (err) {
         return res.json({ error: "Filter product wrong" });
@@ -265,7 +275,7 @@ class Product {
           _id: { $in: productArray },
         });
         if (cartProducts) {
-          return res.json({ Products: cartProducts });
+          return res.json({ products: cartProducts });
         }
       } catch (err) {
         return res.json({ error: "Cart product wrong" });
@@ -343,6 +353,152 @@ class Product {
       } catch (err) {
         console.log(err);
       }
+    }
+  }
+
+  async productCount(req, res) {
+    try {
+      const totalProducts = await productModel.countDocuments();
+
+      return res.json({
+        success: true,
+        totalProducts,
+      });
+    } catch (err) {
+      console.log(err);
+
+      return res.status(500).json({
+        success: false,
+      });
+    }
+  }
+
+  async searchProduct(req, res) {
+    try {
+      const query = req.query.q;
+
+      if (!query) {
+        return res.status(400).json({
+          success: false,
+          message: "Search query required",
+        });
+      }
+
+      const products = await productModel.find({
+        $or: [
+          {
+            pName: {
+              $regex: query,
+              $options: "i",
+            },
+          },
+          {
+            pDescription: {
+              $regex: query,
+              $options: "i",
+            },
+          },
+        ],
+      });
+
+      return res.status(200).json({
+        success: true,
+        products,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Search failed",
+      });
+    }
+  }
+
+  async filterProducts(req, res) {
+    try {
+      const { category, minPrice, maxPrice, sort } = req.body;
+
+      let filter = {};
+
+      // CATEGORY FILTER
+      if (category) {
+        filter.pCategory = category;
+      }
+
+      // PRICE FILTER
+      if (minPrice || maxPrice) {
+        filter.pPrice = {};
+
+        if (minPrice) {
+          filter.pPrice.$gte = minPrice;
+        }
+
+        if (maxPrice) {
+          filter.pPrice.$lte = maxPrice;
+        }
+      }
+
+      // SORTING
+      let sortOption = {};
+
+      if (sort === "low-high") {
+        sortOption.pPrice = 1;
+      }
+
+      if (sort === "high-low") {
+        sortOption.pPrice = -1;
+      }
+
+      if (sort === "newest") {
+        sortOption.createdAt = -1;
+      }
+
+      const products = await productModel.find(filter).sort(sortOption);
+
+      return res.json({
+        success: true,
+        products,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Filter failed",
+      });
+    }
+  }
+
+  async paginateProducts(req, res) {
+    try {
+      const page = Number(req.query.page) || 1;
+
+      const limit = Number(req.query.limit) || 8;
+
+      const skip = (page - 1) * limit;
+
+      const totalProducts = await productModel.countDocuments();
+
+      const products = await productModel
+        .find({})
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+
+      return res.json({
+        success: true,
+        products,
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Pagination failed",
+      });
     }
   }
 }

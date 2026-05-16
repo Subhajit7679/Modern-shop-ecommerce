@@ -36,22 +36,23 @@ const customizeRouter = require("./routes/customize");
 const { loginCheck } = require("./middleware/auth");
 const CreateAllFolder = require("./config/uploadFolderCreateScript");
 
+const dashboardRoutes = require("./routes/dashboard");
+
 /* Create All Uploads Folder if not exists | For Uploading Images */
 CreateAllFolder();
 
 // Database Connection
 mongoose
-  .connect(process.env.DATABASE, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() =>
     console.log(
-      "==============Mongodb Database Connected Successfully=============="
-    )
+      "==============Mongodb Database Connected Successfully==============",
+    ),
   )
-  .catch((err) => console.log("Database Not Connected !!!"));
+  .catch((err) => {
+    console.log("Database Not Connected !!!");
+    console.log(err.message);
+  });
 
 // Middleware
 app.use(morgan("dev"));
@@ -69,6 +70,8 @@ app.use("/api/product", productRouter);
 app.use("/api", brainTreeRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/customize", customizeRouter);
+
+app.use("/api/dashboard", dashboardRoutes);
 
 // Run Server
 const PORT = process.env.PORT || 8000;

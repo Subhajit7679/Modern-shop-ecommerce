@@ -18,20 +18,26 @@ class User {
   }
 
   async getSingleUser(req, res) {
-    let { uId } = req.body;
-    if (!uId) {
-      return res.json({ error: "All filled must be required" });
-    } else {
-      try {
-        let User = await userModel
-          .findById(uId)
-          .select("name email phoneNumber userImage updatedAt createdAt");
-        if (User) {
-          return res.json({ User });
-        }
-      } catch (err) {
-        console.log(err);
-      }
+    try {
+      const { uId } = req.body;
+
+      console.log(uId);
+
+      const user = await userModel.findById(uId);
+
+      console.log(user);
+
+      return res.json({
+        success: true,
+        User: user,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.json({
+        success: false,
+        message: "Server error",
+      });
     }
   }
 
@@ -130,5 +136,6 @@ class User {
   }
 }
 
-const ordersController = new User();
-module.exports = ordersController;
+const usersController = new User();
+
+module.exports = usersController;
