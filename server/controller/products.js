@@ -66,14 +66,19 @@ class Product {
 
       let { pName, pDescription, pPrice, pCategory } = req.body;
 
-      let pImage = req.file ? req.file.filename : "default.png";
+      // MULTIPLE IMAGES
+      let pImages = req.files?.length
+        ? req.files.map((file) => file.filename)
+        : ["default.png"];
 
+      // VALIDATION
       if (!pName || !pDescription || !pPrice || !pCategory) {
         return res.json({
           error: "All fields required",
         });
       }
 
+      // CREATE PRODUCT
       const newProduct = new productModel({
         pName,
         pDescription,
@@ -84,7 +89,8 @@ class Product {
         pOffer: "No",
         pStatus: "Active",
 
-        pImages: [pImage],
+        // SAVE MULTIPLE IMAGES
+        pImages,
       });
 
       await newProduct.save();
@@ -190,25 +196,34 @@ class Product {
   }
 
   async getSingleProduct(req, res) {
-    let { pId } = req.body;
-    if (!pId) {
-      return res.json({ error: "All filled must be required" });
-    } else {
-      try {
-        let singleProduct = await productModel
-          .findById(pId)
-          .populate("pCategory", "cName")
-          .populate("pRatingsReviews.user", "name email userImage");
-        if (singleProduct) {
-          return res.json({
-            product: singleProduct,
-          });
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    }
+  let { pId } = req.body;
+
+  if (!pId) {
+    return res.json({
+      error: "All filled must be required",
+    });
   }
+
+  try {
+
+    let singleProduct = await productModel
+      .findById(pId)
+      .populate("pCategory", "cName");
+
+    return res.json({
+      product: singleProduct,
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    return res.json({
+      error: "Product fetch failed",
+    });
+
+  }
+}
 
   async getProductByCategory(req, res) {
     let { catId } = req.body;
@@ -498,6 +513,74 @@ class Product {
       return res.status(500).json({
         success: false,
         message: "Pagination failed",
+      });
+    }
+  }
+
+  async relatedProducts(req, res) {
+    try {
+      const { categoryId, productId } = req.query;
+
+      const products = await productModel
+        .find({
+          pCategory: categoryId,
+          _id: { $ne: productId },
+        })
+        .limit(4)
+        .sort({ createdAt: -1 });
+
+      return res.json({
+        success: true,
+        products,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch related products",
+      });
+    }
+  }
+
+  async addReview(req, res) {
+    try {
+      const { productId, user, rating, review } = req.body;
+
+      // FIND PRODUCT
+      const product = await productModel.findById(productId);
+
+      // CHECK PRODUCT
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Product not found",
+        });
+      }
+
+      // NEW REVIEW OBJECT
+      const newReview = {
+        user,
+        rating,
+        review,
+      };
+
+      // PUSH REVIEW
+      product.pRatingsReviews.push(newReview);
+
+      // SAVE PRODUCT
+      await product.save();
+
+      return res.json({
+        success: true,
+        message: "Review added successfully",
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Review failed",
       });
     }
   }

@@ -10,6 +10,9 @@ import toast from "react-hot-toast";
 
 import { useNavigate } from "react-router-dom";
 
+import { debounce } from "lodash";
+import axios from "axios";
+
 function Navbar() {
   const { cart } = useContext(CartContext);
 
@@ -24,6 +27,26 @@ function Navbar() {
   const [search, setSearch] = useState("");
 
   const navigate = useNavigate();
+
+  const [searchResults, setSearchResults] = useState([]);
+
+  const fetchSearchResults = debounce(async (value) => {
+    try {
+      // EMPTY INPUT
+      if (!value.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      const response = await axios.get(
+        `http://localhost:8000/api/product/search?q=${value}`,
+      );
+
+      setSearchResults(response.data.products);
+    } catch (error) {
+      console.log(error);
+    }
+  }, 300);
 
   useEffect(() => {
     const loggedUser = JSON.parse(localStorage.getItem("user"));
@@ -75,12 +98,16 @@ function Navbar() {
 
         {/* RIGHT SIDE */}
         <div className="hidden md:flex items-center gap-4 relative">
-          <div className="flex items-center">
+          <div className="relative flex items-center">
             <input
               type="text"
               placeholder="Search products..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+
+                fetchSearchResults(e.target.value);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   if (search.trim()) {
@@ -98,6 +125,36 @@ function Navbar() {
               Search
             </button>
           </div>
+
+          {searchResults.length > 0 && (
+            <div className="absolute top-14 left-0 w-[350px] bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden z-50 shadow-lg">
+              {searchResults.map((item) => (
+                <div
+                  key={item._id}
+                  onClick={() => {
+                    navigate(`/products/${item._id}`);
+
+                    setSearchResults([]);
+                  }}
+                  className="flex items-center gap-3 p-3 hover:bg-zinc-800 cursor-pointer transition"
+                >
+                  {/* IMAGE */}
+                  <img
+                    src={`http://localhost:8000/uploads/products/${item.pImages[0]}`}
+                    alt={item.pName}
+                    className="w-14 h-14 object-cover rounded-lg"
+                  />
+
+                  {/* INFO */}
+                  <div>
+                    <h3 className="text-white font-semibold">{item.pName}</h3>
+
+                    <p className="text-zinc-400 text-sm">₹{item.pPrice}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {user ? (
             <div className="relative">

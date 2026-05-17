@@ -38,11 +38,16 @@ const productSchema = new mongoose.Schema(
     pRatingsReviews: [
       {
         review: String,
-        user: { type: ObjectId, ref: "users" },
-        rating: String,
+
+        user: String,
+
+        rating: {
+          type: Number,
+        },
+
         createdAt: {
           type: Date,
-          default: Date.now(),
+          default: Date.now,
         },
       },
     ],
@@ -51,7 +56,7 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const productModel = mongoose.model("products", productSchema);

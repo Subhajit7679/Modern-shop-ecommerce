@@ -24,6 +24,7 @@ import MyOrders from "./pages/MyOrders";
 import ManageAddress from "./pages/ManageAddress";
 import SearchResults from "./pages/SearchResults";
 
+
 function App() {
   const location = useLocation();
 
@@ -134,6 +135,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/products/:id" element={<ProductDetails />} />
 
         <Route path="/search" element={<SearchResults />} />
 

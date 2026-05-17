@@ -30,7 +30,7 @@ router.get("/single-product/:id", async (req, res) => {
 /* ADD PRODUCT */
 router.post(
   "/add-product",
-  upload.single("pImage"),
+  upload.array("pImages", 5),
   productController.postAddProduct,
 );
 
@@ -68,6 +68,16 @@ router.post(
 router.get(
   "/paginate-products",
   productController.paginateProducts
+);
+
+router.get(
+  "/related-products",
+  productController.relatedProducts
+);
+
+router.post(
+  "/add-review",
+  productController.addReview
 );
 
 router.get("/search", productController.searchProduct);
