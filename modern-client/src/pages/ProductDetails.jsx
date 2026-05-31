@@ -8,6 +8,7 @@ import { getSingleProduct } from "../services/productService";
 
 import { CartContext } from "../context/CartContext";
 import { WishlistContext } from "../context/WishlistContext";
+import toast from "react-hot-toast";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -29,6 +30,8 @@ function ProductDetails() {
   const [rating, setRating] = useState(0);
 
   const [review, setReview] = useState("");
+
+  const [selectedSize, setSelectedSize] = useState("");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -75,9 +78,29 @@ function ProductDetails() {
     );
   }
 
-  const quantity = getProductQuantity(product._id);
+  const quantity = getProductQuantity(product._id, selectedSize);
+
+  const totalReviews = product.pRatingsReviews?.length || 0;
+
+  const averageRating =
+    totalReviews > 0
+      ? (
+          product.pRatingsReviews.reduce(
+            (acc, item) => acc + Number(item.rating),
+            0,
+          ) / totalReviews
+        ).toFixed(1)
+      : 0;
 
   const handleReviewSubmit = async () => {
+    if (!rating) {
+      return toast.error("Please select rating");
+    }
+
+    if (!review.trim()) {
+      return toast.error("Please write review");
+    }
+
     try {
       const response = await axios.post(
         "http://localhost:8000/api/product/add-review",
@@ -91,17 +114,29 @@ function ProductDetails() {
 
       console.log(response.data);
 
-      alert("Review Added");
+      toast.success("Review Added");
 
       window.location.reload();
     } catch (err) {
       console.log(err);
+
+      toast.error("Review failed");
     }
   };
 
-  console.log(product);
-  console.log(product.pRatingsReviews);
-  console.log(selectedImage);
+  const selectedSizeStock =
+    product?.pSizes?.find((item) => item.size === selectedSize)?.quantity || 0;
+
+  const totalStock =
+    product?.pSizes?.reduce((total, item) => total + item.quantity, 0) || 0;
+
+  const handleIncrease = () => {
+    if (quantity >= selectedSizeStock) {
+      return toast.error("Stock limit reached");
+    }
+
+    increaseQuantity(product._id, selectedSize);
+  };
 
   return (
     <div className="bg-black min-h-screen text-white px-8 md:px-16 py-20">
@@ -151,6 +186,18 @@ function ProductDetails() {
 
           <h1 className="text-5xl font-bold leading-tight">{product.pName}</h1>
 
+          <div className="flex items-center gap-4 mt-5">
+            {/* STARS */}
+            <div className="flex text-yellow-400 text-2xl">
+              {"★".repeat(Math.round(averageRating))}
+            </div>
+
+            {/* REVIEW INFO */}
+            <p className="text-zinc-400 text-lg">
+              {averageRating} ({totalReviews} reviews)
+            </p>
+          </div>
+
           <p className="text-zinc-400 text-lg mt-8 leading-relaxed">
             {product.pDescription}
           </p>
@@ -159,13 +206,92 @@ function ProductDetails() {
             <span className="text-5xl font-bold">₹ {product.pPrice}</span>
           </div>
 
+          <div className="mt-4">
+            {selectedSize ? (
+              selectedSizeStock <= 3 ? (
+                <p className="text-orange-400 font-semibold">
+                  Only {selectedSizeStock} left
+                </p>
+              ) : (
+                <p className="text-green-500 font-semibold">In Stock</p>
+              )
+            ) : (
+              <p className="text-zinc-500">Select size to check stock</p>
+            )}
+          </div>
+
+          {/* SIZE SELECTOR */}
+
+          <div className="mt-10">
+            <h2 className="text-xl font-semibold mb-5">Select Size</h2>
+
+            <div className="flex gap-4 flex-wrap">
+              {product.pSizes?.map((item, index) => (
+                <button
+                  key={index}
+                  disabled={item.quantity <= 0}
+                  onClick={() => setSelectedSize(item.size)}
+                  className={`
+      relative
+      w-16
+      h-16
+      rounded-2xl
+      border
+      text-lg
+      font-bold
+      transition
+
+      ${
+        selectedSize === item.size
+          ? "bg-white text-black border-white"
+          : "border-zinc-700 text-white"
+      }
+
+      ${
+        item.quantity <= 0
+          ? "opacity-40 cursor-not-allowed"
+          : "hover:bg-zinc-800"
+      }
+    `}
+                >
+                  {item.size}
+
+                  {item.quantity <= 0 && (
+                    <span
+                      className="
+          absolute
+          inset-0
+          flex
+          items-center
+          justify-center
+          text-red-500
+          text-3xl
+          font-bold
+        "
+                    >
+                      /
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* CART */}
           <div className="mt-10">
             {quantity > 0 ? (
               <div className="flex items-center gap-5">
                 <button
-                  onClick={() => decreaseQuantity(product._id)}
-                  className="bg-white text-black w-12 h-12 rounded-full text-2xl font-bold"
+                  onClick={() => decreaseQuantity(product._id, selectedSize)}
+                  className="
+          bg-white
+          text-black
+          w-12
+          h-12
+          rounded-full
+          text-2xl
+          font-bold
+        "
                 >
                   -
                 </button>
@@ -173,16 +299,60 @@ function ProductDetails() {
                 <span className="text-2xl font-bold">{quantity}</span>
 
                 <button
-                  onClick={() => increaseQuantity(product._id)}
-                  className="bg-white text-black w-12 h-12 rounded-full text-2xl font-bold"
+                  onClick={handleIncrease}
+                  className="
+          bg-white
+          text-black
+          w-12
+          h-12
+          rounded-full
+          text-2xl
+          font-bold
+        "
                 >
                   +
                 </button>
               </div>
+            ) : totalStock === 0 ? (
+              <button
+                disabled
+                className="
+        bg-red-500/20
+        text-red-400
+        px-10
+        py-5
+        rounded-2xl
+        font-bold
+        text-lg
+        cursor-not-allowed
+      "
+              >
+                Out Of Stock
+              </button>
             ) : (
               <button
-                onClick={() => addToCart(product)}
-                className="bg-white text-black px-10 py-5 rounded-2xl font-bold text-lg hover:scale-105 transition"
+                onClick={() => {
+                  if (!selectedSize) {
+                    return toast.error("Please select size");
+                  }
+
+                  addToCart({
+                    ...product,
+                    quantity: 1,
+                    selectedSize,
+                  });
+                }}
+                className="
+        bg-white
+        text-black
+        px-10
+        py-5
+        rounded-2xl
+        font-bold
+        text-lg
+        hover:scale-105
+        transition
+      "
               >
                 Add To Cart
               </button>
@@ -275,8 +445,39 @@ function ProductDetails() {
         <div className="mt-14 space-y-8">
           {Array.isArray(product.pRatingsReviews) &&
             product.pRatingsReviews.map((item, index) => (
-              <div key={index} className="bg-zinc-900 p-6 rounded-3xl">
-                <div className="flex items-center gap-2 mb-3">
+              <div
+                key={index}
+                className="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl"
+              >
+                {/* TOP */}
+
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-4">
+                    {/* AVATAR */}
+
+                    <div className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center font-bold text-xl">
+                      {item.user?.charAt(0)}
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-lg">{item.user}</h3>
+
+                      <p className="text-green-500 text-sm">
+                        Verified Purchase
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* DATE */}
+
+                  <p className="text-zinc-500 text-sm">
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+
+                {/* STARS */}
+
+                <div className="flex gap-1 mb-4">
                   {[...Array(Number(item.rating))].map((_, i) => (
                     <span key={i} className="text-yellow-400 text-2xl">
                       ★
@@ -284,9 +485,11 @@ function ProductDetails() {
                   ))}
                 </div>
 
-                <p className="text-zinc-300 text-lg">{item.review}</p>
+                {/* REVIEW */}
 
-                <p className="text-zinc-500 text-sm mt-4">— {item.user}</p>
+                <p className="text-zinc-300 text-lg leading-relaxed">
+                  {item.review}
+                </p>
               </div>
             ))}
         </div>

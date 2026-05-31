@@ -85,7 +85,8 @@ class Product {
         pPrice,
         pCategory,
 
-        pQuantity: 1,
+        pSizes: JSON.parse(req.body.pSizes),
+
         pOffer: "No",
         pStatus: "Active",
 
@@ -110,69 +111,84 @@ class Product {
   }
 
   async postEditProduct(req, res) {
-    let {
-      pId,
-      pName,
-      pDescription,
-      pPrice,
-      pQuantity,
-      pCategory,
-      pOffer,
-      pStatus,
-      pImages,
-    } = req.body;
-    let editImages = req.files;
+    try {
+      const {
+        pId,
+        pName,
+        pDescription,
+        pPrice,
+        pSizes,
+        pCategory,
+        pOffer,
+        pStatus,
+        pImages,
+      } = req.body;
 
-    // Validate other fileds
-    if (
-      !pId |
-      !pName |
-      !pDescription |
-      !pPrice |
-      !pQuantity |
-      !pCategory |
-      !pOffer |
-      !pStatus
-    ) {
-      return res.json({ error: "All filled must be required" });
-    }
-    // Validate Name and description
-    else if (pName.length > 255 || pDescription.length > 3000) {
-      return res.json({
-        error: "Name 255 & Description must not be 3000 charecter long",
-      });
-    }
-    // Validate Update Images
-    else if (editImages && editImages.length == 1) {
-      Product.deleteImages(editImages, "file");
-      return res.json({ error: "Must need to provide 2 images" });
-    } else {
+      // SAFE FILES
+      const editImages = req.files || [];
+
+      // VALIDATION
+      if (
+        !pId ||
+        !pName ||
+        !pDescription ||
+        !pPrice ||
+        !pCategory ||
+        !pStatus
+      ) {
+        return res.json({
+          error: "All fields required",
+        });
+      }
+
+      // UPDATE OBJECT
       let editData = {
         pName,
         pDescription,
         pPrice,
-        pQuantity,
         pCategory,
         pOffer,
         pStatus,
+
+        // IMPORTANT
+        pSizes: JSON.parse(pSizes),
       };
-      if (editImages.length == 2) {
-        let allEditImages = [];
+
+      // IF NEW IMAGES UPLOADED
+      if (editImages.length > 0) {
+        const allEditImages = [];
+
         for (const img of editImages) {
           allEditImages.push(img.filename);
         }
-        editData = { ...editData, pImages: allEditImages };
-        Product.deleteImages(pImages.split(","), "string");
+
+        editData.pImages = allEditImages;
+
+        // DELETE OLD IMAGES
+        if (pImages) {
+          Product.deleteImages(pImages.split(","), "string");
+        }
       }
-      try {
-        let editProduct = productModel.findByIdAndUpdate(pId, editData);
-        editProduct.exec((err) => {
-          if (err) console.log(err);
-          return res.json({ success: "Product edit successfully" });
-        });
-      } catch (err) {
-        console.log(err);
-      }
+
+      // UPDATE PRODUCT
+      const updatedProduct = await productModel.findByIdAndUpdate(
+        pId,
+        editData,
+        {
+          new: true,
+        },
+      );
+
+      return res.json({
+        success: "Product updated successfully",
+        product: updatedProduct,
+      });
+    } catch (err) {
+      console.log(err);
+
+      return res.status(500).json({
+        error: "Product update failed",
+      });
     }
   }
 
@@ -196,34 +212,30 @@ class Product {
   }
 
   async getSingleProduct(req, res) {
-  let { pId } = req.body;
+    let { pId } = req.body;
 
-  if (!pId) {
-    return res.json({
-      error: "All filled must be required",
-    });
+    if (!pId) {
+      return res.json({
+        error: "All filled must be required",
+      });
+    }
+
+    try {
+      let singleProduct = await productModel
+        .findById(pId)
+        .populate("pCategory", "cName");
+
+      return res.json({
+        product: singleProduct,
+      });
+    } catch (err) {
+      console.log(err);
+
+      return res.json({
+        error: "Product fetch failed",
+      });
+    }
   }
-
-  try {
-
-    let singleProduct = await productModel
-      .findById(pId)
-      .populate("pCategory", "cName");
-
-    return res.json({
-      product: singleProduct,
-    });
-
-  } catch (err) {
-
-    console.log(err);
-
-    return res.json({
-      error: "Product fetch failed",
-    });
-
-  }
-}
 
   async getProductByCategory(req, res) {
     let { catId } = req.body;

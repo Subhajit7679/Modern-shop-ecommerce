@@ -57,16 +57,15 @@ export const addProduct = async (formData, token) => {
 
 export const deleteProduct = async (id) => {
   try {
-    const response = await axios.delete(`${API}/delete-product/${id}`);
+    const response = await axios.delete(
+      `http://localhost:8000/api/product/delete-product/${id}`
+    );
 
     return response.data;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
 
-    return {
-      success: false,
-      error: "Delete Failed",
-    };
+    return error.response.data;
   }
 };
 
@@ -83,25 +82,26 @@ export const getProductCount = async () => {
     };
   }
 };
-   
 
-export const searchProduct = async (
-  keyword
-) => {
-
+export const updateProduct = async (data) => {
   try {
-
-    const response = await axios.post(
-      `${API}/search-product`,
-      { keyword }
+    const response = await axios.put(
+      `${API}/edit-product/${data.get("pId")}`,
+      data,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
 
     return response.data;
-
   } catch (error) {
-
     console.log(error);
 
+    return {
+      success: false,
+      error: "Update Failed",
+    };
   }
-
 };

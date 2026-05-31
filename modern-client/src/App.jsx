@@ -23,6 +23,7 @@ import Profile from "./pages/Profile";
 import MyOrders from "./pages/MyOrders";
 import ManageAddress from "./pages/ManageAddress";
 import SearchResults from "./pages/SearchResults";
+import { Toaster } from "react-hot-toast";
 
 
 function App() {
@@ -33,7 +34,7 @@ function App() {
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
-
+    <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />

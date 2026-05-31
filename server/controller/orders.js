@@ -1,4 +1,5 @@
 const orderModel = require("../models/orders");
+const productModel = require("../models/products");
 
 class Order {
   async getAllOrders(req, res) {
@@ -67,64 +68,67 @@ class Order {
   }
 
   async postCreateOrder(req, res) {
+    try {
+      const { allProduct, user, amount, transactionId, address, phone } =
+        req.body;
+        
 
-  try {
+      if (
+        !allProduct ||
+        !user ||
+        !amount ||
+        !transactionId ||
+        !address ||
+        !phone
+      ) {
+        return res.json({
+          success: false,
+          message: "All fields required",
+        });
+      }
 
-    const {
-      allProduct,
-      user,
-      amount,
-      transactionId,
-      address,
-      phone,
-    } = req.body;
+      const newOrder = new orderModel({
+        allProduct,
+        user,
+        amount,
+        transactionId,
+        address,
+        phone,
+      });
 
-    if (
-      !allProduct ||
-      !user ||
-      !amount ||
-      !transactionId ||
-      !address ||
-      !phone
-    ) {
+      const savedOrder = await newOrder.save();
+
+      // REDUCE STOCK
+      // REDUCE STOCK
+      for (const item of allProduct) {
+        await productModel.updateOne(
+          {
+            _id: item.id?._id || item.id || item._id,
+            "pSizes.size": item.selectedSize,
+          },
+
+          {
+            $inc: {
+              "pSizes.$.quantity": -Number(item.quantity),
+            },
+          },
+        );
+      }
+
+      return res.json({
+        success: true,
+        message: "Order placed successfully",
+        order: savedOrder,
+      });
+    } catch (error) {
+      console.log(error);
 
       return res.json({
         success: false,
-        message: "All fields required",
+        error: "Order failed",
       });
-
     }
-
-    const newOrder = new orderModel({
-      allProduct,
-      user,
-      amount,
-      transactionId,
-      address,
-      phone,
-    });
-
-    const savedOrder =
-      await newOrder.save();
-
-    return res.json({
-      success: true,
-      message: "Order placed successfully",
-      order: savedOrder,
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    return res.json({
-      success: false,
-      error: "Order failed",
-    });
-
   }
-
-}
 
   async postUpdateOrder(req, res) {
     let { oId, status } = req.body;

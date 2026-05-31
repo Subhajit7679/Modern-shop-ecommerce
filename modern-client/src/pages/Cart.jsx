@@ -42,11 +42,17 @@ function Cart() {
                   <div className="flex-1">
                     <h2 className="text-2xl font-semibold">{item.pName}</h2>
 
+                    <p className="text-zinc-400 mt-1">
+                      Size: {item.selectedSize}
+                    </p>
+
                     <p className="text-zinc-400 mt-2">₹ {item.pPrice}</p>
 
                     <div className="flex items-center gap-4 mt-4">
                       <button
-                        onClick={() => decreaseQuantity(item._id)}
+                        onClick={() =>
+                          decreaseQuantity(item._id, item.selectedSize)
+                        }
                         className="bg-zinc-800 w-10 h-10 rounded-xl text-xl"
                       >
                         -
@@ -57,7 +63,9 @@ function Cart() {
                       </span>
 
                       <button
-                        onClick={() => increaseQuantity(item._id)}
+                        onClick={() =>
+                          increaseQuantity(item._id, item.selectedSize)
+                        }
                         className="bg-zinc-800 w-10 h-10 rounded-xl text-xl"
                       >
                         +
@@ -66,7 +74,7 @@ function Cart() {
                   </div>
 
                   <button
-                    onClick={() => removeFromCart(item._id)}
+                    onClick={() => removeFromCart(item._id, item.selectedSize)}
                     className="bg-red-500/20 text-red-400 px-4 py-2 rounded-xl h-fit"
                   >
                     Remove

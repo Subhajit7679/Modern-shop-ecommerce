@@ -143,7 +143,6 @@ function ManageOrders() {
                   "
                   >
                     ₹ {order.amount}
-                    
                   </h2>
 
                   <select
@@ -206,30 +205,17 @@ function ManageOrders() {
                     />
 
                     <div>
-                      <h2
-                        className="
-                        font-bold
-                        text-lg
-                      "
-                      >
+                      <h2 className="  font-bold  text-lg ">
                         {item.id?.pName}
                       </h2>
 
-                      <p
-                        className="
-                        text-zinc-500
-                      "
-                      >
-                        Qty : {item.quantitiy}
+                      <p className=" text-zinc-500 ">Qty : {item.quantity}</p>
+
+                      <p className=" text-zinc-500 ">
+                        Size : {item.selectedSize}
                       </p>
 
-                      <p
-                        className="
-                        text-zinc-400
-                      "
-                      >
-                        ₹ {item.id?.pPrice}
-                      </p>
+                      <p className=" text-zinc-400">₹ {item.id?.pPrice}</p>
                     </div>
                   </div>
                 ))}

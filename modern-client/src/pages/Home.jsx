@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 import { getAllProducts } from "../services/productService";
-import { CartContext } from "../context/CartContext";
+
 import { WishlistContext } from "../context/WishlistContext";
 
 import fashionVideo from "../assets/videos/fashion.mp4";
@@ -12,9 +12,6 @@ import { FaInstagram, FaFacebookF, FaYoutube } from "react-icons/fa";
 
 function Home() {
   const [products, setProducts] = useState([]);
-
-  const { addToCart, increaseQuantity, decreaseQuantity, getProductQuantity } =
-    useContext(CartContext);
 
   const { addToWishlist, removeFromWishlist, isInWishlist } =
     useContext(WishlistContext);
@@ -152,8 +149,6 @@ function Home() {
           className="flex gap-6 overflow-x-auto pb-4 scroll-smooth"
         >
           {products.slice(0, 8).map((product) => {
-            const quantity = getProductQuantity(product._id);
-
             return (
               <motion.div
                 whileHover={{
@@ -209,61 +204,25 @@ function Home() {
                     </span>
                   </div>
 
-                  {quantity > 0 ? (
-                    <div className="flex items-center gap-4 mb-4">
-                      <button
-                        onClick={() => decreaseQuantity(product._id)}
-                        className="
-                bg-white
-                text-black
-                w-10
-                h-10
-                rounded-full
-                font-bold
-                hover:scale-110
-                transition
-              "
-                      >
-                        -
-                      </button>
-
-                      <span className="text-lg">{quantity}</span>
-
-                      <button
-                        onClick={() => increaseQuantity(product._id)}
-                        className="
-                bg-white
-                text-black
-                w-10
-                h-10
-                rounded-full
-                font-bold
-                hover:scale-110
-                transition
-              "
-                      >
-                        +
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => addToCart(product)}
-                      className="
-              bg-white
-              text-black
-              px-5
-              py-3
-              rounded-2xl
-              font-semibold
-              w-full
-              hover:bg-zinc-200
-              transition-all
-              duration-300
-            "
-                    >
-                      Add To Cart
-                    </button>
-                  )}
+                  <Link
+                    to={`/product/${product._id}`}
+                    className="
+    block
+    text-center
+    bg-white
+    text-black
+    px-5
+    py-3
+    rounded-2xl
+    font-semibold
+    w-full
+    hover:bg-zinc-200
+    transition-all
+    duration-300
+  "
+                  >
+                    View Details
+                  </Link>
 
                   <button
                     onClick={() =>

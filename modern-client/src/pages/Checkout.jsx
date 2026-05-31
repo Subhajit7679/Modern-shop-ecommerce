@@ -32,7 +32,10 @@ function Checkout() {
     const orderData = {
       allProduct: cart.map((item) => ({
         id: item._id,
+
         quantity: item.quantity,
+
+        selectedSize: item.selectedSize,
       })),
 
       user: user.user._id,
@@ -47,8 +50,6 @@ function Checkout() {
     };
 
     const response = await createOrder(orderData);
-    
-   
 
     if (response.success) {
       localStorage.removeItem("cart");

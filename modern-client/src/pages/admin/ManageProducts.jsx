@@ -1,39 +1,57 @@
 import { useEffect, useState } from "react";
+
 import toast from "react-hot-toast";
 
 import Sidebar from "./Sidebar";
 
 import { getAllProducts, deleteProduct } from "../../services/productService";
+
 import { useNavigate } from "react-router-dom";
 
 function ManageProducts() {
   const navigate = useNavigate();
+
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
+  // FETCH PRODUCTS
   const fetchProducts = async () => {
-    const data = await getAllProducts();
-    
-    const handleDelete = async (id) => {
+    try {
+      const data = await getAllProducts();
+
+      setProducts(data.products || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // DELETE PRODUCT
+  const handleDelete = async (id) => {
+    try {
       const confirmDelete = window.confirm("Delete this product?");
 
       if (!confirmDelete) return;
 
       const response = await deleteProduct(id);
 
+      console.log(response);
+
       if (response.success) {
         toast.success("Product Deleted");
 
-        fetchProducts();
+        // REMOVE PRODUCT FROM UI
+        setProducts(products.filter((item) => item._id !== id));
       } else {
-        toast.error("Delete Failed");
+        toast.error(response.error || "Delete Failed");
       }
-    };
+    } catch (error) {
+      console.log(error);
 
-    setProducts(data.products || []);
+      toast.error("Something went wrong");
+    }
   };
 
   return (
@@ -52,7 +70,6 @@ function ManageProducts() {
         </div>
 
         {/* TABLE */}
-
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">
           <table className="w-full">
             <thead className="bg-zinc-950">
@@ -108,32 +125,36 @@ function ManageProducts() {
                   {/* ACTIONS */}
                   <td className="p-6">
                     <div className="flex gap-3">
+                      {/* EDIT */}
                       <button
                         type="button"
                         onClick={() =>
                           navigate(`/admin/edit-product/${product._id}`)
                         }
                         className="
-                        bg-white
-                        text-black
-                        px-5
-                        py-2
-                        rounded-xl
+                          bg-white
+                          text-black
+                          px-5
+                          py-2
+                          rounded-xl
+                          hover:scale-105
+                          transition
                         "
                       >
                         Edit
                       </button>
 
+                      {/* DELETE */}
                       <button
                         type="button"
                         onClick={() => handleDelete(product._id)}
                         className="
-                       bg-red-500
-                       hover:bg-red-600
-                       transition
-                       px-5
-                        py-2
-                        rounded-xl
+                          bg-red-500
+                          hover:bg-red-600
+                          transition
+                          px-5
+                          py-2
+                          rounded-xl
                         "
                       >
                         Delete

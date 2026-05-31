@@ -16,6 +16,14 @@ function Admin() {
     pDescription: "",
     pPrice: "",
     pCategory: "",
+
+    pSizes: [
+      { size: "S", quantity: 0 },
+      { size: "M", quantity: 0 },
+      { size: "L", quantity: 0 },
+      { size: "XL", quantity: 0 },
+    ],
+
     pImages: [],
   });
 
@@ -60,6 +68,8 @@ function Admin() {
 
       data.append("pCategory", formData.pCategory);
 
+      data.append("pSizes", JSON.stringify(formData.pSizes));
+
       // MULTIPLE IMAGES
       formData.pImages.forEach((img) => {
         data.append("pImages", img);
@@ -77,6 +87,14 @@ function Admin() {
         pDescription: "",
         pPrice: "",
         pCategory: "",
+
+        pSizes: [
+          { size: "S", quantity: 0 },
+          { size: "M", quantity: 0 },
+          { size: "L", quantity: 0 },
+          { size: "XL", quantity: 0 },
+        ],
+
         pImages: [],
       });
     } catch (error) {
@@ -132,6 +150,37 @@ function Admin() {
                 </option>
               ))}
             </select>
+
+            {/* SIZE STOCK */}
+
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">Product Sizes & Stock</h2>
+
+              {formData.pSizes.map((item, index) => (
+                <div key={index} className="flex items-center gap-4">
+                  <div className="w-20 bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-center">
+                    {item.size}
+                  </div>
+
+                  <input
+                    type="number"
+                    placeholder={`Stock for ${item.size}`}
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const updatedSizes = [...formData.pSizes];
+
+                      updatedSizes[index].quantity = Number(e.target.value);
+
+                      setFormData({
+                        ...formData,
+                        pSizes: updatedSizes,
+                      });
+                    }}
+                    className="flex-1 bg-black border border-zinc-700 rounded-2xl px-5 py-4"
+                  />
+                </div>
+              ))}
+            </div>
 
             {/* DESCRIPTION */}
             <textarea
