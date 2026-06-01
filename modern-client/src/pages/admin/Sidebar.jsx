@@ -23,6 +23,11 @@ function Sidebar() {
       name: "Manage Orders",
       path: "/admin/orders",
     },
+
+    {
+      name: "Manage Coupons",
+      path: "/admin/manage-coupons",
+    },
   ];
 
   return (

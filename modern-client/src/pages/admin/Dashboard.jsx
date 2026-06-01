@@ -91,6 +91,19 @@ function Dashboard() {
           >
             Manage Products
           </Link>
+
+          <Link
+            to="/admin/manage-coupons"
+            className="
+    border
+    border-zinc-700
+    px-8
+    py-4
+    rounded-2xl
+  "
+          >
+            Manage Coupons
+          </Link>
         </div>
 
         {/* RECENT ORDERS */}

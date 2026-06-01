@@ -2,34 +2,17 @@ const userModel = require("../models/users");
 const bcrypt = require("bcryptjs");
 
 class User {
+  // =========================
+  // GET ALL USERS
+  // =========================
+
   async getAllUser(req, res) {
     try {
-      let Users = await userModel
-        .find({})
-        .populate("allProduct.id", "pName pImages pPrice")
-        .populate("user", "name email")
-        .sort({ _id: -1 });
-      if (Users) {
-        return res.json({ Users });
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  async getSingleUser(req, res) {
-    try {
-      const { uId } = req.body;
-
-      console.log(uId);
-
-      const user = await userModel.findById(uId);
-
-      console.log(user);
+      const users = await userModel.find({}).sort({ _id: -1 });
 
       return res.json({
         success: true,
-        User: user,
+        users,
       });
     } catch (error) {
       console.log(error);
@@ -41,97 +24,304 @@ class User {
     }
   }
 
-  async postAddUser(req, res) {
-    let { allProduct, user, amount, transactionId, address, phone } = req.body;
-    if (
-      !allProduct ||
-      !user ||
-      !amount ||
-      !transactionId ||
-      !address ||
-      !phone
-    ) {
-      return res.json({ message: "All filled must be required" });
-    } else {
-      try {
-        let newUser = new userModel({
-          allProduct,
-          user,
-          amount,
-          transactionId,
-          address,
-          phone,
+  // =========================
+  // GET SINGLE USER
+  // =========================
+
+  async getSingleUser(req, res) {
+    try {
+      const { uId } = req.body;
+
+      if (!uId) {
+        return res.json({
+          success: false,
+          message: "User ID required",
         });
-        let save = await newUser.save();
-        if (save) {
-          return res.json({ success: "User created successfully" });
-        }
-      } catch (err) {
-        return res.json({ error: error });
       }
+
+      const user = await userModel.findById(uId);
+
+      if (!user) {
+        return res.json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      return res.json({
+        success: true,
+        user,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.json({
+        success: false,
+        message: "Server error",
+      });
     }
   }
+
+  // =========================
+  // EDIT USER PROFILE
+  // =========================
 
   async postEditUser(req, res) {
-    let { uId, name, phoneNumber } = req.body;
-    if (!uId || !name || !phoneNumber) {
-      return res.json({ message: "All filled must be required" });
-    } else {
-      let currentUser = userModel.findByIdAndUpdate(uId, {
-        name: name,
-        phoneNumber: phoneNumber,
-        updatedAt: Date.now(),
+    try {
+      const { uId, name, email, phoneNumber } = req.body;
+
+      if (!uId || !name || !email) {
+        return res.json({
+          success: false,
+          message: "All fields required",
+        });
+      }
+
+      // CHECK EMAIL ALREADY EXISTS
+      const existingEmail = await userModel.findOne({
+        email,
+        _id: { $ne: uId },
       });
-      currentUser.exec((err, result) => {
-        if (err) console.log(err);
-        return res.json({ success: "User updated successfully" });
+
+      if (existingEmail) {
+        return res.json({
+          success: false,
+          message: "Email already exists",
+        });
+      }
+
+      const updatedUser = await userModel.findByIdAndUpdate(
+        uId,
+        {
+          name,
+          email,
+          phoneNumber,
+        },
+        { new: true }
+      );
+
+      return res.json({
+        success: true,
+        message: "Profile updated successfully",
+        user: updatedUser,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.json({
+        success: false,
+        message: "Server error",
       });
     }
   }
 
-  async getDeleteUser(req, res) {
-    let { oId, status } = req.body;
-    if (!oId || !status) {
-      return res.json({ message: "All filled must be required" });
-    } else {
-      let currentUser = userModel.findByIdAndUpdate(oId, {
-        status: status,
-        updatedAt: Date.now(),
+  // =========================
+  // ADD ADDRESS
+  // =========================
+
+  async addAddress(req, res) {
+    try {
+      const { uId, address } = req.body;
+
+      if (!uId || !address) {
+        return res.json({
+          success: false,
+          message: "All fields required",
+        });
+      }
+
+      const user = await userModel.findById(uId);
+
+      if (!user) {
+        return res.json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // MAX 5 ADDRESS LIMIT
+      if (user.addresses.length >= 5) {
+        return res.json({
+          success: false,
+          message: "Maximum 5 addresses allowed",
+        });
+      }
+
+      const updatedUser = await userModel.findByIdAndUpdate(
+        uId,
+        {
+          $push: {
+            addresses: address,
+          },
+        },
+        { new: true }
+      );
+
+      return res.json({
+        success: true,
+        message: "Address added successfully",
+        user: updatedUser,
       });
-      currentUser.exec((err, result) => {
-        if (err) console.log(err);
-        return res.json({ success: "User updated successfully" });
+    } catch (error) {
+      console.log(error);
+
+      return res.json({
+        success: false,
+        message: "Server error",
       });
     }
   }
+
+  // =========================
+  // EDIT ADDRESS
+  // =========================
+
+  async editAddress(req, res) {
+    try {
+      const { uId, addressId, address } = req.body;
+
+      if (!uId || !addressId || !address) {
+        return res.json({
+          success: false,
+          message: "All fields required",
+        });
+      }
+
+      const user = await userModel.findById(uId);
+
+      if (!user) {
+        return res.json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      const updatedAddresses = user.addresses.map((item) =>
+        item._id.toString() === addressId
+          ? {
+              ...item.toObject(),
+              ...address,
+            }
+          : item
+      );
+
+      user.addresses = updatedAddresses;
+
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: "Address updated successfully",
+        addresses: user.addresses,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.json({
+        success: false,
+        message: "Server error",
+      });
+    }
+  }
+
+  // =========================
+  // DELETE ADDRESS
+  // =========================
+
+  async deleteAddress(req, res) {
+    try {
+      const { uId, addressId } = req.body;
+
+      if (!uId || !addressId) {
+        return res.json({
+          success: false,
+          message: "All fields required",
+        });
+      }
+
+      const user = await userModel.findById(uId);
+
+      if (!user) {
+        return res.json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      user.addresses = user.addresses.filter(
+        (item) => item._id.toString() !== addressId
+      );
+
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: "Address deleted successfully",
+        addresses: user.addresses,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.json({
+        success: false,
+        message: "Server error",
+      });
+    }
+  }
+
+  // =========================
+  // CHANGE PASSWORD
+  // =========================
 
   async changePassword(req, res) {
-    let { uId, oldPassword, newPassword } = req.body;
-    if (!uId || !oldPassword || !newPassword) {
-      return res.json({ message: "All filled must be required" });
-    } else {
-      const data = await userModel.findOne({ _id: uId });
-      if (!data) {
+    try {
+      let { uId, oldPassword, newPassword } = req.body;
+
+      if (!uId || !oldPassword || !newPassword) {
         return res.json({
-          error: "Invalid user",
+          success: false,
+          message: "All fields required",
         });
-      } else {
-        const oldPassCheck = await bcrypt.compare(oldPassword, data.password);
-        if (oldPassCheck) {
-          newPassword = bcrypt.hashSync(newPassword, 10);
-          let passChange = userModel.findByIdAndUpdate(uId, {
-            password: newPassword,
-          });
-          passChange.exec((err, result) => {
-            if (err) console.log(err);
-            return res.json({ success: "Password updated successfully" });
-          });
-        } else {
-          return res.json({
-            error: "Your old password is wrong!!",
-          });
-        }
       }
+
+      const user = await userModel.findById(uId);
+
+      if (!user) {
+        return res.json({
+          success: false,
+          message: "Invalid user",
+        });
+      }
+
+      const oldPassCheck = await bcrypt.compare(
+        oldPassword,
+        user.password
+      );
+
+      if (!oldPassCheck) {
+        return res.json({
+          success: false,
+          message: "Old password is incorrect",
+        });
+      }
+
+      const hashedPassword = bcrypt.hashSync(newPassword, 10);
+
+      await userModel.findByIdAndUpdate(uId, {
+        password: hashedPassword,
+      });
+
+      return res.json({
+        success: true,
+        message: "Password updated successfully",
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.json({
+        success: false,
+        message: "Server error",
+      });
     }
   }
 }

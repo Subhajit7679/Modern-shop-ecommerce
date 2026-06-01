@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
       default: "user.png",
     },
     verified: {
-      type: String,
+      type: Boolean,
       default: false,
     },
     secretKey: {
@@ -41,9 +41,34 @@ const userSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
+
+    addresses: [
+      {
+        fullName: String,
+
+        phone: String,
+
+        pincode: String,
+
+        state: String,
+
+        city: String,
+
+        house: String,
+
+        area: String,
+
+        landmark: String,
+
+        addressType: {
+          type: String,
+          default: "Home",
+        },
+      },
+    ],
   },
 
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const userModel = mongoose.model("users", userSchema);

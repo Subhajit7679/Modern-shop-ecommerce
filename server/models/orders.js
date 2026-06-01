@@ -4,11 +4,23 @@ const { ObjectId } = mongoose.Schema.Types;
 const orderSchema = new mongoose.Schema(
   {
     allProduct: [
-      {
-        id: { type: ObjectId, ref: "products" },
-        quantity: Number,
-      },
-    ],
+  {
+    id: {
+      type: ObjectId,
+      ref: "products",
+    },
+
+    quantity: {
+      type: Number,
+      required: true,
+    },
+
+    selectedSize: {
+      type: String,
+      required: true,
+    },
+  },
+],
     user: {
       type: ObjectId,
       ref: "users",

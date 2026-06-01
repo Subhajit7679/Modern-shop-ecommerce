@@ -37,6 +37,7 @@ const { loginCheck } = require("./middleware/auth");
 const CreateAllFolder = require("./config/uploadFolderCreateScript");
 
 const dashboardRoutes = require("./routes/dashboard");
+const couponRoutes = require("./routes/coupons");
 
 /* Create All Uploads Folder if not exists | For Uploading Images */
 CreateAllFolder();
@@ -75,6 +76,7 @@ app.use("/api/order", orderRouter);
 app.use("/api/customize", customizeRouter);
 
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/coupon", couponRoutes);
 
 // Run Server
 const PORT = process.env.PORT || 8000;

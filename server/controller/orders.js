@@ -67,6 +67,65 @@ class Order {
     }
   }
 
+
+async getSingleOrder(req, res) {
+
+  try {
+
+    const { orderId } = req.body;
+
+    if (!orderId) {
+
+      return res.json({
+        success: false,
+        message: "Order ID required",
+      });
+
+    }
+
+    const order =
+      await orderModel
+
+        .findById(orderId)
+
+        .populate(
+          "allProduct.id",
+          "pName pImages pPrice"
+        )
+
+        .populate(
+          "user",
+          "name email"
+        );
+
+    if (!order) {
+
+      return res.json({
+        success: false,
+        message: "Order not found",
+      });
+
+    }
+
+    return res.json({
+      success: true,
+      order,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.json({
+      success: false,
+      message: "Server error",
+    });
+
+  }
+
+}
+
+
   async postCreateOrder(req, res) {
     try {
       const { allProduct, user, amount, transactionId, address, phone } =

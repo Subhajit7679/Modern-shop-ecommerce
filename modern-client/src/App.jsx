@@ -24,7 +24,8 @@ import MyOrders from "./pages/MyOrders";
 import ManageAddress from "./pages/ManageAddress";
 import SearchResults from "./pages/SearchResults";
 import { Toaster } from "react-hot-toast";
-
+import OrderDetails from "./pages/OrderDetails";
+import ManageCoupons from "./pages/admin/ManageCoupons";
 
 function App() {
   const location = useLocation();
@@ -34,7 +35,7 @@ function App() {
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
-    <Toaster position="top-right" />
+      <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
@@ -82,6 +83,14 @@ function App() {
             </AdminRoute>
           }
         />
+        <Route
+          path="/admin/manage-coupons"
+          element={
+            <AdminRoute>
+              <ManageCoupons />
+            </AdminRoute>
+          }
+        />
 
         <Route path="/add-category" element={<AddCategory />} />
         <Route
@@ -124,6 +133,15 @@ function App() {
           element={
             <ProtectedRoute>
               <MyOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/order/:id"
+          element={
+            <ProtectedRoute>
+              <OrderDetails />
             </ProtectedRoute>
           }
         />

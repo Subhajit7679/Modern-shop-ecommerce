@@ -15,6 +15,11 @@ router.post(
 );
 
 router.post(
+  "/single-order",
+  ordersController.getSingleOrder
+);
+
+router.post(
   "/create-order",
   ordersController.postCreateOrder
 );

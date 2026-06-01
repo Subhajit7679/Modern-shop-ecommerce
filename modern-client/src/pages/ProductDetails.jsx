@@ -33,6 +33,8 @@ function ProductDetails() {
 
   const [selectedSize, setSelectedSize] = useState("");
 
+  const [addedToCart, setAddedToCart] = useState(false);
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -278,45 +280,108 @@ function ProductDetails() {
           </div>
 
           {/* CART */}
-          <div className="mt-10">
-            {quantity > 0 ? (
-              <div className="flex items-center gap-5">
-                <button
-                  onClick={() => decreaseQuantity(product._id, selectedSize)}
-                  className="
-          bg-white
-          text-black
-          w-12
-          h-12
-          rounded-full
-          text-2xl
-          font-bold
-        "
-                >
-                  -
-                </button>
+{/* CART */}
 
-                <span className="text-2xl font-bold">{quantity}</span>
+<div className="mt-10">
 
-                <button
-                  onClick={handleIncrease}
-                  className="
-          bg-white
-          text-black
-          w-12
-          h-12
-          rounded-full
-          text-2xl
-          font-bold
+  {quantity > 0 ? (
+
+    <div
+      className="
+        flex
+        flex-wrap
+        items-center
+        gap-5
+      "
+    >
+
+      {/* QUANTITY CONTROLS */}
+
+      <div
+        className="
+          flex
+          items-center
+          gap-5
         "
-                >
-                  +
-                </button>
-              </div>
-            ) : totalStock === 0 ? (
-              <button
-                disabled
-                className="
+      >
+
+        <button
+          onClick={() =>
+            decreaseQuantity(
+              product._id,
+              selectedSize
+            )
+          }
+
+          className="
+            bg-white
+            text-black
+            w-12
+            h-12
+            rounded-full
+            text-2xl
+            font-bold
+          "
+        >
+          -
+        </button>
+
+        <span
+          className="
+            text-2xl
+            font-bold
+          "
+        >
+          {quantity}
+        </span>
+
+        <button
+          onClick={handleIncrease}
+
+          className="
+            bg-white
+            text-black
+            w-12
+            h-12
+            rounded-full
+            text-2xl
+            font-bold
+          "
+        >
+          +
+        </button>
+
+      </div>
+
+      {/* VIEW CART */}
+
+      <button
+        onClick={() =>
+          navigate("/cart")
+        }
+
+        className="
+          bg-green-500
+          text-white
+          px-8
+          py-3
+          rounded-2xl
+          font-bold
+          hover:scale-105
+          transition
+        "
+      >
+        View Cart
+      </button>
+
+    </div>
+
+  ) : totalStock === 0 ? (
+
+    <button
+      disabled
+
+      className="
         bg-red-500/20
         text-red-400
         px-10
@@ -326,23 +391,41 @@ function ProductDetails() {
         text-lg
         cursor-not-allowed
       "
-              >
-                Out Of Stock
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  if (!selectedSize) {
-                    return toast.error("Please select size");
-                  }
+    >
+      Out Of Stock
+    </button>
 
-                  addToCart({
-                    ...product,
-                    quantity: 1,
-                    selectedSize,
-                  });
-                }}
-                className="
+  ) : (
+
+    <button
+      onClick={() => {
+
+        if (!selectedSize) {
+
+          return toast.error(
+            "Please select size"
+          );
+
+        }
+
+        addToCart({
+
+          ...product,
+
+          quantity: 1,
+
+          selectedSize,
+
+        });
+
+      }}
+
+      disabled={
+        selectedSize &&
+        selectedSizeStock <= 0
+      }
+
+      className="
         bg-white
         text-black
         px-10
@@ -352,12 +435,18 @@ function ProductDetails() {
         text-lg
         hover:scale-105
         transition
+        disabled:bg-zinc-700
+        disabled:text-zinc-400
+        disabled:cursor-not-allowed
       "
-              >
-                Add To Cart
-              </button>
-            )}
-          </div>
+    >
+      Add To Cart
+    </button>
+
+  )}
+
+</div>
+          
 
           {/* WISHLIST */}
           <button

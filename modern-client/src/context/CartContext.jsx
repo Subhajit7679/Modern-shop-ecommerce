@@ -1,8 +1,13 @@
 import { createContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import toast from "react-hot-toast";
 
 export const CartContext = createContext();
 
 function CartProvider({ children }) {
+  const navigate = useNavigate();
+
   const [cart, setCart] = useState(() => {
     const savedCart = localStorage.getItem("cart");
 
@@ -10,8 +15,10 @@ function CartProvider({ children }) {
   });
 
   // GET PRODUCT QUANTITY
-  const getProductQuantity = (id) => {
-    const product = cart.find((item) => item._id === id);
+  const getProductQuantity = (id, selectedSize) => {
+    const product = cart.find(
+      (item) => item._id === id && item.selectedSize === selectedSize,
+    );
 
     return product ? product.quantity : 0;
   };
@@ -32,6 +39,14 @@ function CartProvider({ children }) {
 
   // ADD TO CART
   const addToCart = (product) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user) {
+      navigate("/login");
+
+      return;
+    }
+
     const existingProduct = cart.find(
       (item) =>
         item._id === product._id && item.selectedSize === product.selectedSize,
@@ -48,6 +63,8 @@ function CartProvider({ children }) {
       );
 
       setCart(updatedCart);
+
+      toast.success("Cart updated");
     } else {
       setCart([
         ...cart,
@@ -56,6 +73,8 @@ function CartProvider({ children }) {
           quantity: 1,
         },
       ]);
+
+      toast.success("Added to cart");
     }
   };
 
@@ -112,6 +131,11 @@ function CartProvider({ children }) {
     setCart(updatedCart);
   };
 
+  // CLEAR CART
+  const clearCart = () => {
+    setCart([]);
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -121,6 +145,7 @@ function CartProvider({ children }) {
         increaseQuantity,
         decreaseQuantity,
         getProductQuantity,
+        clearCart,
       }}
     >
       {children}
