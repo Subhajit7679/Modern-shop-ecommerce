@@ -8,21 +8,26 @@ import axios from "axios";
 
 import { CartContext } from "../context/CartContext";
 
-import { createOrder } from "../services/orderService";
+import {
+  createOrder,
+  createRazorpayOrder,
+  verifyPayment,
+} from "../services/orderService";
 import { useLocation } from "react-router-dom";
 
 function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { cart } = useContext(CartContext);
+  const { cart, clearCart } = useContext(CartContext);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [addresses, setAddresses] = useState([]);
 
   const [selectedAddress, setSelectedAddress] = useState(null);
-
+  const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("COD");
   const subtotal = cart.reduce(
     (total, item) => total + item.pPrice * item.quantity,
 
@@ -32,8 +37,16 @@ function Checkout() {
   const discount = location.state?.discount || 0;
 
   const finalTotal = location.state?.finalTotal || subtotal;
+  const deliveryCharge = finalTotal > 999 ? 0 : 99;
+  const grandTotal = finalTotal + deliveryCharge;
 
   const coupon = location.state?.coupon;
+
+  useEffect(() => {
+    if (cart.length === 0) {
+      navigate("/cart");
+    }
+  }, []);
 
   // =========================
   // GET USER ADDRESSES
@@ -58,7 +71,11 @@ function Checkout() {
           // AUTO SELECT FIRST ADDRESS
 
           if (savedAddresses.length > 0) {
-            setSelectedAddress(savedAddresses[0]);
+            const defaultAddress = savedAddresses.find(
+              (item) => item.isDefault,
+            );
+
+            setSelectedAddress(defaultAddress || savedAddresses[0]);
           }
         }
       } catch (error) {
@@ -72,57 +89,239 @@ function Checkout() {
   // =========================
   // PLACE ORDER
   // =========================
+  const loadRazorpay = () => {
+  return new Promise((resolve) => {
+    const script =
+      document.createElement("script");
 
-  const handleOrder = async () => {
-    if (!selectedAddress) {
-      return toast.error("Please select address");
+     script.src =
+      "https://checkout.razorpay.com/v1/checkout.js";
+
+     script.onload = () =>
+      resolve(true);
+
+     script.onerror = () =>
+      resolve(false);
+
+     document.body.appendChild(
+      script
+     );
+    });
+  };
+
+
+ const handleRazorpayPayment = async (orderData) => {
+   try {
+    const loaded = await loadRazorpay();
+
+    if (!loaded) {
+      toast.error("Razorpay SDK Failed");
+      return;
     }
 
-    const fullAddress = `
+    const razorpayResponse =
+      await createRazorpayOrder(
+        grandTotal
+      );
 
-${selectedAddress.house},
-${selectedAddress.area},
+     if (
+      !razorpayResponse.success
+     ) {
+      toast.error(
+        "Unable to create payment"
+      );
+      return;
+    }
 
-${selectedAddress.city},
-${selectedAddress.state}
+    const razorpayOrder =
+      razorpayResponse.order;
 
-${selectedAddress.pincode}
+    const options = {
+      key:
+        import.meta.env
+          .VITE_RAZORPAY_KEY_ID,
 
-Landmark:
-${selectedAddress.landmark}
+      amount:
+        razorpayOrder.amount,
 
-`;
+      currency:
+        razorpayOrder.currency,
 
-    const orderData = {
-      allProduct: cart.map((item) => ({
-        id: item._id,
+      name: "Your Ecommerce",
 
-        quantity: item.quantity,
+      description:
+        "Order Payment",
 
-        selectedSize: item.selectedSize,
-      })),
+      order_id:
+        razorpayOrder.id,
 
-      user: user.user._id,
+      handler:
+        async function (
+          response
+        ) {
+          const verifyResponse =
+            await verifyPayment({
+              razorpay_order_id:
+                response.razorpay_order_id,
 
-      amount: finalTotal,
+              razorpay_payment_id:
+                response.razorpay_payment_id,
 
-      transactionId: "COD_" + Date.now(),
+              razorpay_signature:
+                response.razorpay_signature,
+            });
 
-      address: fullAddress,
+          if (
+            !verifyResponse.success
+          ) {
+            toast.error(
+              "Payment Verification Failed"
+            );
 
-      phone: selectedAddress.phone,
+            return;
+          }
+
+          orderData.transactionId =
+            response.razorpay_payment_id;
+
+          orderData.paymentStatus =
+            "Paid";
+
+          const orderResponse =
+            await createOrder(
+              orderData
+            );
+
+          if (
+            orderResponse.success
+          ) {
+            clearCart();
+
+            localStorage.removeItem(
+              "cart"
+            );
+            setLoading(false);
+            navigate(
+              "/order-success"
+            );
+          } else {
+            toast.error(
+              "Order Failed"
+            );
+          }
+        },
+
+      prefill: {
+        name:
+          selectedAddress?.fullName,
+
+        contact:
+          selectedAddress?.phone,
+
+        email:
+          user?.user?.email,
+      },
+
+      theme: {
+        color: "#000000",
+      },
     };
 
-    const response = await createOrder(orderData);
+    const paymentObject =
+      new window.Razorpay(
+        options
+      );
 
-    if (response.success) {
-      localStorage.removeItem("cart");
+     paymentObject.open();
+     } catch (error) {
+     console.log(error);
 
-      window.location.href = "/order-success";
-    } else {
-      toast.error("Order Failed");
-    }
+     toast.error(
+      "Payment Failed"
+     );
+     }
+ };
+
+
+
+ const handleOrder = async () => {
+   const confirmOrder =
+    window.confirm(
+      "Confirm your order?"
+    );
+
+   if (!confirmOrder) return;
+
+   if (!selectedAddress) {
+    return toast.error(
+      "Please select address"
+    );
+   }
+
+   setLoading(true);
+
+  const orderData = {
+    allProduct: cart.map(
+      (item) => ({
+        id: item._id,
+
+        quantity:
+          item.quantity,
+
+        selectedSize:
+          item.selectedSize,
+      })
+    ),
+
+    user: user.user._id,
+
+    amount: grandTotal,
+
+    transactionId:
+      paymentMethod === "COD"
+        ? "COD_" +
+          Date.now()
+        : "",
+
+    orderId:
+      "ORD-" + Date.now(),
+
+    shippingAddress:
+      selectedAddress,
+
+    paymentMethod,
+
+    paymentStatus:
+      paymentMethod === "COD"
+        ? "Pending"
+        : "Paid",
+
+    estimatedDelivery:
+      new Date(
+        Date.now() +
+          7 *
+            24 *
+            60 *
+            60 *
+            1000
+      ),
   };
+
+  // RAZORPAY FLOW
+
+  if (
+    paymentMethod ===
+    "RAZORPAY"
+  ) {
+    await handleRazorpayPayment(
+      orderData
+    );
+
+    setLoading(false);
+
+    return;
+  }
+ };
 
   return (
     <div
@@ -206,7 +405,13 @@ ${selectedAddress.landmark}
                 </h2>
 
                 <button
-                  onClick={() => navigate("/profile")}
+                  onClick={() =>
+                     navigate("/manage-address", {
+                       state: {
+                      fromCheckout: true,
+                        },
+                         })
+                  }
                   className="
                     text-sm
                     text-zinc-400
@@ -243,7 +448,13 @@ ${selectedAddress.landmark}
                   </h3>
 
                   <button
-                    onClick={() => navigate("/profile")}
+                    onClick={() =>
+                     navigate("/manage-address", {
+                      state: {
+                      fromCheckout: true,
+                      },
+                       })
+                    }
                     className="
                       mt-4
                       bg-white
@@ -301,6 +512,22 @@ ${selectedAddress.landmark}
                       >
                         {address.addressType}
                       </span>
+                      {address.isDefault && (
+                        <span
+                          className="
+                        bg-green-500/20
+                        text-green-400
+                           px-3
+                         py-1
+                             rounded-full
+                            text-xs
+                             font-bold
+                         ml-2
+                         "
+                        >
+                          DEFAULT
+                        </span>
+                      )}
 
                       <div
                         className={`
@@ -383,6 +610,65 @@ ${selectedAddress.landmark}
               Order Summary
             </h2>
 
+            <div
+              className="
+    bg-black
+    border
+    border-zinc-800
+    rounded-3xl
+    p-5
+    mb-8
+  "
+            >
+              <h3
+                className="
+      text-lg
+      font-bold
+      mb-4
+    "
+              >
+                Payment Method
+              </h3>
+
+              <div className="space-y-3">
+                <label
+                  className="
+        flex
+        items-center
+        gap-3
+        cursor-pointer
+      "
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={paymentMethod === "COD"}
+                    onChange={() => setPaymentMethod("COD")}
+                  />
+
+                  <span>Cash On Delivery</span>
+                </label>
+
+                <label
+                  className="
+        flex
+        items-center
+        gap-3
+        cursor-pointer
+      "
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={paymentMethod === "RAZORPAY"}
+                    onChange={() => setPaymentMethod("RAZORPAY")}
+                  />
+
+                  <span>Razorpay</span>
+                </label>
+              </div>
+            </div>
+
             {/* PRODUCTS */}
 
             <div className="space-y-5">
@@ -439,10 +725,38 @@ ${selectedAddress.landmark}
                       font-bold
                     "
                   >
-                    ₹ {item.pPrice}
+                    ₹ {item.pPrice * item.quantity}
                   </h3>
                 </div>
               ))}
+            </div>
+
+            <div
+              className="
+                bg-black
+               border
+               border-zinc-800
+                rounded-3xl
+                 p-5
+                   mb-8
+                "
+            >
+              <div className="flex items-center gap-4">
+                <div className="text-3xl">🚚</div>
+
+                <div>
+                  <h3
+                    className="
+          font-bold
+          text-lg
+        "
+                  >
+                    Estimated Delivery
+                  </h3>
+
+                  <p className="text-zinc-400">5 - 7 Business Days</p>
+                </div>
+              </div>
             </div>
 
             {/* TOTAL */}
@@ -485,6 +799,37 @@ ${selectedAddress.landmark}
                   </div>
                 )}
 
+                {coupon && (
+                  <div
+                    className="
+      flex
+      items-center
+      justify-between
+      text-sm
+      text-green-400
+    "
+                  >
+                    <span>Coupon Applied</span>
+
+                    <span>{coupon.code}</span>
+                  </div>
+                )}
+
+                <div
+                  className="
+    flex
+    items-center
+    justify-between
+    text-lg
+  "
+                >
+                  <span>Delivery</span>
+
+                  <span>
+                    {deliveryCharge === 0 ? "FREE" : `₹ ${deliveryCharge}`}
+                  </span>
+                </div>
+
                 <div
                   className="
       flex
@@ -499,13 +844,13 @@ ${selectedAddress.landmark}
                 >
                   <span>Total</span>
 
-                  <span>₹ {finalTotal}</span>
+                  <span>₹ {grandTotal}</span>
                 </div>
               </div>
 
               <button
                 onClick={handleOrder}
-                disabled={addresses.length === 0}
+                disabled={loading || addresses.length === 0}
                 className="
                   w-full
                   bg-white
@@ -519,7 +864,7 @@ ${selectedAddress.landmark}
                   disabled:text-zinc-400
                 "
               >
-                Place Order
+                {loading ? "Processing..." : "Place Order"}
               </button>
             </div>
           </div>

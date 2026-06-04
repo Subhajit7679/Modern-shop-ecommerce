@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+const transporter = require("../config/mail");
 const { toTitleCase, validateEmail } = require("../config/function");
 const bcrypt = require("bcryptjs");
 const userModel = require("../models/users");
@@ -71,7 +73,7 @@ class Auth {
                 email,
                 password,
                 // ========= Here role 1 for admin signup role 0 for customer signup =========
-                userRole: 1, // Field Name change to userRole from role
+                userRole: 0, // Field Name change to userRole from role
               });
               newUser
                 .save()
@@ -146,6 +148,151 @@ class Auth {
       }
     } catch (err) {
       console.log(err);
+    }
+  }
+
+  async forgotPassword(req, res) {
+try {
+const { email } = req.body;
+
+
+console.log("EMAIL RECEIVED:", email);
+
+const user = await userModel.findOne({
+  email,
+});
+
+console.log(
+  "USER FOUND:",
+  user?.email
+);
+
+if (!user) {
+  return res.json({
+    success: false,
+    message: "User not found",
+  });
+}
+
+const resetToken = jwt.sign(
+  {
+    id: user._id,
+  },
+  JWT_SECRET,
+  {
+    expiresIn: "15m",
+  }
+);
+
+user.resetPasswordToken =
+  resetToken;
+
+user.resetPasswordExpire =
+  Date.now() +
+  15 * 60 * 1000;
+
+await user.save();
+
+const resetUrl =
+  `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+console.log(
+  "SENDING EMAIL..."
+);
+
+await transporter.sendMail({
+  from:
+    process.env.EMAIL_USER,
+
+  to: user.email,
+
+  subject:
+    "Reset Your Password",
+
+  html: `
+    <h2>Password Reset</h2>
+
+    <p>
+      Click below to reset your password
+    </p>
+
+    <a href="${resetUrl}">
+      Reset Password
+    </a>
+  `,
+});
+
+console.log(
+  "EMAIL SENT SUCCESSFULLY"
+);
+
+return res.json({
+  success: true,
+  message:
+    "Reset link sent to email",
+});
+
+
+} catch (error) {
+console.log(
+"FORGOT PASSWORD ERROR:"
+);
+
+
+console.log(error);
+
+return res.json({
+  success: false,
+  message:
+    error.message,
+});
+
+
+}
+}
+
+
+  async resetPassword(req, res) {
+    try {
+      const { token, password } = req.body;
+
+      const decoded = jwt.verify(token, JWT_SECRET);
+
+      const user = await userModel.findById(decoded.id);
+
+      if (!user || user.resetPasswordToken !== token) {
+        return res.json({
+          success: false,
+          message: "Invalid token",
+        });
+      }
+
+      if (user.resetPasswordExpire < Date.now()) {
+        return res.json({
+          success: false,
+          message: "Token expired",
+        });
+      }
+
+      user.password = bcrypt.hashSync(password, 10);
+
+      user.resetPasswordToken = null;
+
+      user.resetPasswordExpire = null;
+
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: "Password updated successfully",
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.json({
+        success: false,
+        message: "Invalid token",
+      });
     }
   }
 }

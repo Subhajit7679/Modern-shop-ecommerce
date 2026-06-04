@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-import { signupUser } from "../services/authService";
+import { signupUser, loginUser } from "../services/authService";
+import { useLocation } from "react-router-dom";
 
 function Signup() {
   const [name, setName] = useState("");
@@ -11,31 +12,69 @@ function Signup() {
   const [cPassword, setCPassword] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (user) {
+      navigate("/");
+    }
+  }, []);
 
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    console.log("Signup Clicked");
+    if (password !== cPassword) {
+      toast.error("Passwords do not match");
+
+      return;
+    }
 
     try {
-      const data = await signupUser({
+      const signupData = await signupUser({
         name,
         email,
         password,
         cPassword,
       });
 
-      console.log(data);
+      if (signupData.success) {
+        // AUTO LOGIN
 
-      if (data.success) {
-        toast.success(data.success);
+        const loginData = await loginUser({
+          email,
+          password,
+        });
 
-        navigate("/login");
+        if (loginData.token) {
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              token: loginData.token,
+              user: loginData.user,
+            }),
+          );
+
+          toast.success("Account Created Successfully");
+
+          const redirectTo = location.state?.from || "/";
+
+          navigate(redirectTo);
+        } else {
+          toast.success("Account created. Please login.");
+
+          navigate("/login", {
+            state: {
+              from: location.state?.from,
+            },
+          });
+        }
       } else {
         toast.error(
-          data.error?.email ||
-            data.error?.password ||
-            data.error?.name ||
+          signupData.error?.email ||
+            signupData.error?.password ||
+            signupData.error?.name ||
             "Signup Failed",
         );
       }
@@ -90,6 +129,16 @@ function Signup() {
           >
             Create Account
           </button>
+
+          <p className="text-zinc-400 text-center mt-6">
+            Already have an account?{" "}
+            <span
+              onClick={() => navigate("/login")}
+              className="text-white cursor-pointer hover:underline"
+            >
+              Login
+            </span>
+          </p>
         </form>
       </div>
     </div>

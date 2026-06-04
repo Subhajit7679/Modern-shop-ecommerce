@@ -33,4 +33,7 @@ npm run start
 
 👉 http://localhost:3000
 
+Admin login - testadmin@gmail.com
+Password - 7679166250
+
 💛 Built by Subhajit

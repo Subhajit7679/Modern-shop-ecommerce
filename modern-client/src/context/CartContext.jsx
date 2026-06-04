@@ -42,7 +42,11 @@ function CartProvider({ children }) {
     const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user) {
-      navigate("/login");
+      navigate("/login", {
+        state: {
+          from: window.location.pathname,
+        },
+      });
 
       return;
     }

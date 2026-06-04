@@ -406,7 +406,7 @@ function Home() {
             <div className="flex items-center justify-center gap-6 mt-12 flex-wrap">
               {/* INSTAGRAM */}
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/its__subho__jit?igsh=MW9tejQ1MWZoMGFsYw=="
                 target="_blank"
                 rel="noreferrer"
                 className="group flex items-center gap-4 bg-zinc-900/80 border border-zinc-800 px-8 py-5 rounded-2xl backdrop-blur-xl hover:border-pink-500 hover:-translate-y-1 transition duration-300"
@@ -426,7 +426,7 @@ function Home() {
 
               {/* FACEBOOK */}
               <a
-                href="https://facebook.com"
+                href="https://www.facebook.com/share/1Dkneo7CdU/"
                 target="_blank"
                 rel="noreferrer"
                 className="group flex items-center gap-4 bg-zinc-900/80 border border-zinc-800 px-8 py-5 rounded-2xl backdrop-blur-xl hover:border-blue-500 hover:-translate-y-1 transition duration-300"

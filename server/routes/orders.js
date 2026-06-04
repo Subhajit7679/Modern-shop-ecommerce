@@ -20,6 +20,16 @@ router.post(
 );
 
 router.post(
+  "/create-razorpay-order",
+  ordersController.createRazorpayOrder
+);
+
+router.post(
+  "/verify-payment",
+  ordersController.verifyPayment
+);
+
+router.post(
   "/create-order",
   ordersController.postCreateOrder
 );

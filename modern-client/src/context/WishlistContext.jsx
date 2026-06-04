@@ -33,11 +33,14 @@ function WishlistProvider({ children }) {
     const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user) {
-      navigate("/login");
+      navigate("/login", {
+        state: {
+          from: window.location.pathname,
+        },
+      });
 
       return;
     }
-
     const exists = wishlist.find((item) => item._id === product._id);
 
     if (!exists) {

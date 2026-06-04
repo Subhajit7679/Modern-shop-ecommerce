@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 function MyOrders() {
   const [orders, setOrders] = useState([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -106,7 +107,7 @@ function MyOrders() {
         <div className="space-y-8">
           {orders.map((order) => (
             <div
-              key={order._id}
+              key={order.orderId}
               className="
                 bg-zinc-900
                 border
@@ -122,17 +123,16 @@ function MyOrders() {
                   border-b
                   border-zinc-800
                   p-6
-                  flex
-                  flex-col
-                  md:flex-row
-                  md:items-center
-                  md:justify-between
-                  gap-6
+                   grid
+                  lg:grid-cols-[2fr_120px_140px_180px]
+                  
+                  gap-15
+                  items-center
                 "
               >
-                {/* LEFT */}
+                {/* ORDER INFO */}
 
-                <div>
+                <div className="min-w-[400px]">
                   <p className="text-zinc-500 mb-2">Order ID</p>
 
                   <h2
@@ -142,59 +142,88 @@ function MyOrders() {
                       break-all
                     "
                   >
-                    {order._id}
+                    {order.orderId}
                   </h2>
 
-                  <p
-                    className="
-                      text-zinc-500
-                      mt-3
-                    "
-                  >
-                    {new Date(order.createdAt).toDateString()}
-                  </p>
+                  {order.estimatedDelivery && (
+                    <p className="text-green-400 mt-4">
+                      Estimated Delivery :{" "}
+                      {new Date(order.estimatedDelivery).toDateString()}
+                    </p>
+                  )}
                 </div>
 
-                {/* RIGHT */}
+                {/* PAYMENT */}
 
-                <div className="text-left md:text-right">
+               <div className="w-[120px]">
+                  <p className="text-zinc-500 mb-2">Payment</p>
+
+                  <h2 className="font-semibold mb-4">{order.paymentMethod}</h2>
+
+                  <span
+                    className={`
+      inline-block
+      px-5
+      py-2
+      rounded-full
+      text-sm
+      font-semibold
+
+      ${
+        order.paymentStatus === "Paid"
+          ? "bg-green-500/20 text-green-400"
+          : "bg-yellow-500/20 text-yellow-400"
+      }
+    `}
+                  >
+                    {order.paymentStatus}
+                  </span>
+                </div>
+
+                {/* STATUS */}
+
+                <div className="w-[140px]">
                   <p className="text-zinc-500 mb-2">Status</p>
 
                   <span
                     className={`
-                      px-5
-                      py-2
-                      rounded-full
-                      text-sm
-                      font-semibold
+      inline-block
+      px-5
+      py-2
+      rounded-full
+      text-sm
+      font-semibold
 
-                      ${
-                        order.status === "Delivered"
-                          ? "bg-green-500/20 text-green-400"
-                          : order.status === "Cancelled"
-                            ? "bg-red-500/20 text-red-400"
-                            : order.status === "Shipped"
-                              ? "bg-blue-500/20 text-blue-400"
-                              : "bg-yellow-500/20 text-yellow-400"
-                      }
-                    `}
+      ${
+        order.status === "Delivered"
+          ? "bg-green-500/20 text-green-400"
+          : order.status === "Cancelled"
+            ? "bg-red-500/20 text-red-400"
+            : order.status === "Shipped"
+              ? "bg-blue-500/20 text-blue-400"
+              : "bg-yellow-500/20 text-yellow-400"
+      }
+    `}
                   >
                     {order.status}
                   </span>
                 </div>
 
+                {/* BUTTON */}
+
                 <button
                   onClick={() => navigate(`/order/${order._id}`)}
                   className="
-    bg-white
-    text-black
-    px-6
-    py-3
-    rounded-2xl
-    font-semibold
-    hover:scale-105
-    transition
-  "
+                    bg-white
+                    text-black
+                    px-6
+                    py-3
+                    rounded-2xl
+                    font-semibold
+                    hover:scale-105
+                    transition
+                    whitespace-nowrap
+                  "
                 >
                   View Details
                 </button>
@@ -324,9 +353,13 @@ function MyOrders() {
                 "
               >
                 <div>
-                  <p className="text-zinc-500">Payment</p>
+                  <p className="text-zinc-500">
+                    {order.allProduct.length} Items
+                  </p>
 
-                  <h2 className="font-semibold mt-1">Cash On Delivery</h2>
+                  <p className="text-zinc-500 mt-3">Payment</p>
+
+                  <h2 className="font-semibold mt-1">{order.paymentMethod}</h2>
                 </div>
 
                 <div className="text-left md:text-right">

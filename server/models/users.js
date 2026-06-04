@@ -42,6 +42,16 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
 
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+
+    resetPasswordExpire: {
+      type: Date,
+      default: null,
+    },
+
     addresses: [
       {
         fullName: String,
@@ -63,6 +73,10 @@ const userSchema = new mongoose.Schema(
         addressType: {
           type: String,
           default: "Home",
+        },
+        isDefault: {
+          type: Boolean,
+          default: false,
         },
       },
     ],

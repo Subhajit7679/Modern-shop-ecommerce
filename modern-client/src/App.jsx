@@ -26,11 +26,11 @@ import SearchResults from "./pages/SearchResults";
 import { Toaster } from "react-hot-toast";
 import OrderDetails from "./pages/OrderDetails";
 import ManageCoupons from "./pages/admin/ManageCoupons";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   const location = useLocation();
-
-  const isAdminPage = location.pathname.startsWith("/admin");
 
   return (
     <div className="min-h-screen bg-black">
@@ -159,10 +159,22 @@ function App() {
 
         <Route path="/search" element={<SearchResults />} />
 
-        <Route path="/order-success" element={<OrderSuccess />} />
+        <Route
+          path="/order-success"
+          element={
+            <ProtectedRoute>
+              <OrderSuccess />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
         <Route path="/product/:id" element={<ProductDetails />} />
       </Routes>
     </div>

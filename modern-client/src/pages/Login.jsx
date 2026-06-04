@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import toast from "react-hot-toast";
 
@@ -10,6 +10,7 @@ function Login() {
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -19,9 +20,6 @@ function Login() {
       password,
     });
 
-    console.log(data);
-
-    // FIXED
     if (data.token) {
       localStorage.setItem(
         "user",
@@ -33,7 +31,9 @@ function Login() {
 
       toast.success("Login Successful");
 
-      navigate("/");
+      const redirectTo = location.state?.from || "/";
+
+      navigate(redirectTo);
     } else {
       toast.error(data.error || "Login Failed");
     }
@@ -67,6 +67,34 @@ function Login() {
           >
             Login
           </button>
+
+          <p
+            onClick={() => navigate("/forgot-password")}
+            className="
+    text-zinc-400
+    text-sm
+    cursor-pointer
+    hover:text-white
+  "
+          >
+            Forgot Password?
+          </p>
+
+          <p className="text-zinc-400 text-center mt-6">
+            Don't have an account?{" "}
+            <span
+              onClick={() =>
+                navigate("/signup", {
+                  state: {
+                    from: location.state?.from,
+                  },
+                })
+              }
+              className="text-white cursor-pointer hover:underline"
+            >
+              Register
+            </span>
+          </p>
         </form>
       </div>
     </div>
