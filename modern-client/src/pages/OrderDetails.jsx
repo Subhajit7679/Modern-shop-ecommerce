@@ -28,7 +28,7 @@ function OrderDetails() {
   const cancelOrder = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/order/update-order",
+        "${import.meta.env.VITE_API_URL}/order/update-order",
         {
           oId: order._id,
           status: "Cancelled",
@@ -128,7 +128,7 @@ function OrderDetails() {
     const fetchOrder = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:8000/api/order/single-order",
+          "${import.meta.env.VITE_API_URL}/order/single-order",
           {
             orderId: id,
           },
@@ -350,7 +350,7 @@ function OrderDetails() {
                   {/* IMAGE */}
 
                   <img
-                    src={`http://localhost:8000/uploads/products/${item.id?.pImages?.[0]}`}
+                    src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.id?.pImages?.[0]}`}
                     alt=""
                     className="
                       w-32

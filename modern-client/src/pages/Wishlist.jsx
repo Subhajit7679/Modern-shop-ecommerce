@@ -29,7 +29,7 @@ function Wishlist() {
                 className="bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-800"
               >
                 <img
-                  src={`http://localhost:8000/uploads/products/${product.pImages?.[0]}`}
+                  src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${product.pImages?.[0]}`}
                   alt={product.pName}
                   className="w-full h-72 object-cover"
                 />

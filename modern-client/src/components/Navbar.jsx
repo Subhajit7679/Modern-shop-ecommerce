@@ -48,7 +48,7 @@ function Navbar() {
       }
 
       const response = await axios.get(
-        `http://localhost:8000/api/product/search?q=${value}`,
+        `${import.meta.env.VITE_API_URL}/product/search?q=${value}`,
       );
 
       setSearchResults(response.data.products);
@@ -281,7 +281,7 @@ function Navbar() {
                     "
                   >
                     <img
-                      src={`http://localhost:8000/uploads/products/${item.pImages[0]}`}
+                      src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.pImages[0]}`}
                       alt={item.pName}
                       className="
                         w-14

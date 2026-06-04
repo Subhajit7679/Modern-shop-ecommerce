@@ -13,7 +13,7 @@ function MyOrders() {
         const localUser = JSON.parse(localStorage.getItem("user"));
 
         const response = await axios.post(
-          "http://localhost:8000/api/order/order-by-user",
+          "${import.meta.env.VITE_API_URL}/order/order-by-user",
           {
             uId: localUser.user._id,
           },
@@ -251,7 +251,7 @@ function MyOrders() {
                     {/* IMAGE */}
 
                     <img
-                      src={`http://localhost:8000/uploads/products/${item.id?.pImages?.[0]}`}
+                      src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.id?.pImages?.[0]}`}
                       alt=""
                       className="
                           w-28

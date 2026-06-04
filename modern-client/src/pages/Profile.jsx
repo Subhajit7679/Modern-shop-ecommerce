@@ -24,7 +24,7 @@ function Profile() {
         );
 
         const response = await axios.post(
-          "http://localhost:8000/api/user/single-user",
+          "${import.meta.env.VITE_API_URL}/user/single-user",
           {
             uId: localUser.user._id,
           }
@@ -60,7 +60,7 @@ function Profile() {
       );
 
       const response = await axios.post(
-        "http://localhost:8000/api/user/edit-user",
+        "${import.meta.env.VITE_API_URL}/user/edit-user",
         {
           uId: localUser.user._id,
 

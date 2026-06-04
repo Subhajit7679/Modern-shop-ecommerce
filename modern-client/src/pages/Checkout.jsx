@@ -56,7 +56,7 @@ function Checkout() {
     const fetchUser = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:8000/api/user/single-user",
+          "${import.meta.env.VITE_API_URL}/user/single-user",
 
           {
             uId: user.user._id,
@@ -681,7 +681,7 @@ function Checkout() {
                   "
                 >
                   <img
-                    src={`http://localhost:8000/uploads/products/${item.pImages?.[0]}`}
+                    src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.pImages?.[0]}`}
                     alt=""
                     className="
                       w-20

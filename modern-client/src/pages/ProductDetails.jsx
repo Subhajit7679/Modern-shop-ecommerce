@@ -45,7 +45,7 @@ function ProductDetails() {
         setSelectedImage(data.product.pImages?.[0]);
 
         const relatedResponse = await axios.get(
-          `http://localhost:8000/api/product/related-products?categoryId=${data.product.pCategory._id}&productId=${data.product._id}`,
+          `${import.meta.env.VITE_API_URL}/product/related-products?categoryId=${data.product.pCategory._id}&productId=${data.product._id}`,
         );
 
         setRelatedProducts(relatedResponse.data.products);
@@ -105,7 +105,7 @@ function ProductDetails() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/product/add-review",
+        "${import.meta.env.VITE_API_URL}/product/add-review",
         {
           productId: product._id,
           user: "Subhajit",
@@ -152,7 +152,7 @@ function ProductDetails() {
             <img
               src={
                 selectedImage
-                  ? `http://localhost:8000/uploads/products/${selectedImage}`
+                  ? `https://modern-shop-backend-hfi9.onrender.com/uploads/products/${selectedImage}`
                   : "https://placehold.co/600x600?text=No+Image"
               }
               alt={product.pName}
@@ -171,7 +171,7 @@ function ProductDetails() {
                 }`}
               >
                 <img
-                  src={`http://localhost:8000/uploads/products/${img}`}
+                  src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${img}`}
                   alt="thumbnail"
                   className="w-full h-full object-cover"
                 />
@@ -476,7 +476,7 @@ function ProductDetails() {
               className="bg-zinc-900 rounded-3xl overflow-hidden cursor-pointer hover:scale-105 transition"
             >
               <img
-                src={`http://localhost:8000/uploads/products/${item.pImages?.[0]}`}
+                src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.pImages?.[0]}`}
                 alt={item.pName}
                 className="w-full h-72 object-cover"
               />

@@ -194,7 +194,7 @@ function ManageOrders() {
                     "
                   >
                     <img
-                      src={`http://localhost:8000/uploads/products/${item.id?.pImages?.[0]}`}
+                      src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.id?.pImages?.[0]}`}
                       alt=""
                       className="
                         w-20

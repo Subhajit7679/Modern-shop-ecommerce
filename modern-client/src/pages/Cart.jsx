@@ -69,7 +69,7 @@ function Cart() {
   const applyCoupon = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/coupon/apply-coupon",
+        "${import.meta.env.VITE_API_URL}/coupon/apply-coupon",
 
         {
           code: couponCode,
@@ -179,7 +179,7 @@ function Cart() {
                   {/* IMAGE */}
 
                   <img
-                    src={`http://localhost:8000/uploads/products/${item.pImages?.[0]}`}
+                    src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.pImages?.[0]}`}
                     alt={item.pName}
                     className="
                       w-full

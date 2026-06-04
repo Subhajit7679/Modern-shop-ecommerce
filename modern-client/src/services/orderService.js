@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const API =
-  "http://localhost:8000/api/order";
+  "${import.meta.env.VITE_API_URL}/order";
 
 /* CREATE ORDER */
 

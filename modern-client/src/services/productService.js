@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = "http://localhost:8000/api/product";
+const API = `${import.meta.env.VITE_API_URL}/product`;
 
 // GET ALL PRODUCTS
 export const getAllProducts = async () => {
@@ -57,9 +57,7 @@ export const addProduct = async (formData, token) => {
 
 export const deleteProduct = async (id) => {
   try {
-    const response = await axios.delete(
-      `http://localhost:8000/api/product/delete-product/${id}`
-    );
+    const response = await axios.delete(`${API}/delete-product/${id}`);
 
     return response.data;
   } catch (error) {

@@ -176,7 +176,7 @@ function Home() {
               >
                 <Link to={`/product/${product._id}`}>
                   <img
-                    src={`http://localhost:8000/uploads/products/${product.pImages?.[0]}`}
+                    src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${product.pImages?.[0]}`}
                     alt={product.pName}
                     className="
             w-full

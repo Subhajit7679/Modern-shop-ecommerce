@@ -158,7 +158,7 @@ function EditProduct() {
             {product?.pImages?.map((img, index) => (
               <img
                 key={index}
-                src={`http://localhost:8000/uploads/products/${img}`}
+                src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${img}`}
                 alt=""
                 className="w-28 h-28 object-cover rounded-2xl"
               />

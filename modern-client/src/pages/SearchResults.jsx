@@ -43,7 +43,7 @@ const SearchResults = () => {
       setLoading(true);
 
       const response = await axios.get(
-        `http://localhost:8000/api/product/search?q=${query}`,
+        `${import.meta.env.VITE_API_URL}/product/search?q=${query}`,
       );
 
       setProducts(response.data.products);
@@ -59,7 +59,7 @@ const SearchResults = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8000/api/category/all-category",
+        "${import.meta.env.VITE_API_URL}/category/all-category",
       );
 
       console.log(response.data);
@@ -75,7 +75,7 @@ const SearchResults = () => {
       setLoading(true);
 
       const response = await axios.post(
-        "http://localhost:8000/api/product/filter-products",
+        "${import.meta.env.VITE_API_URL}/product/filter-products",
         {
           category: selectedCategory,
           minPrice,
@@ -99,7 +99,7 @@ const SearchResults = () => {
       setLoading(true);
 
       const response = await axios.get(
-        `http://localhost:8000/api/product/paginate-products?page=${pageNumber}&limit=4`,
+        `${import.meta.env.VITE_API_URL}/product/paginate-products?page=${pageNumber}&limit=4`,
       );
 
       setProducts(response.data.products);
@@ -210,7 +210,7 @@ const SearchResults = () => {
           >
             {/* IMAGE */}
             <img
-              src={`http://localhost:8000/uploads/products/${item.pImages[0]}`}
+              src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.pImages[0]}`}
               alt={item.pName}
               className="h-72 w-full object-cover"
             />
