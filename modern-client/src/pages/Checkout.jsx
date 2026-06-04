@@ -245,33 +245,26 @@ function Checkout() {
 
 
  const handleOrder = async () => {
-   const confirmOrder =
-    window.confirm(
-      "Confirm your order?"
-    );
+  const confirmOrder = window.confirm(
+    "Confirm your order?"
+  );
 
-   if (!confirmOrder) return;
+  if (!confirmOrder) return;
 
-   if (!selectedAddress) {
+  if (!selectedAddress) {
     return toast.error(
       "Please select address"
     );
-   }
+  }
 
-   setLoading(true);
+  setLoading(true);
 
   const orderData = {
-    allProduct: cart.map(
-      (item) => ({
-        id: item._id,
-
-        quantity:
-          item.quantity,
-
-        selectedSize:
-          item.selectedSize,
-      })
-    ),
+    allProduct: cart.map((item) => ({
+      id: item._id,
+      quantity: item.quantity,
+      selectedSize: item.selectedSize,
+    })),
 
     user: user.user._id,
 
@@ -279,12 +272,10 @@ function Checkout() {
 
     transactionId:
       paymentMethod === "COD"
-        ? "COD_" +
-          Date.now()
+        ? "COD_" + Date.now()
         : "",
 
-    orderId:
-      "ORD-" + Date.now(),
+    orderId: "ORD-" + Date.now(),
 
     shippingAddress:
       selectedAddress,
@@ -299,29 +290,48 @@ function Checkout() {
     estimatedDelivery:
       new Date(
         Date.now() +
-          7 *
-            24 *
-            60 *
-            60 *
-            1000
+          7 * 24 * 60 * 60 * 1000
       ),
   };
 
-  // RAZORPAY FLOW
+  try {
+    if (paymentMethod === "RAZORPAY") {
+      await handleRazorpayPayment(
+        orderData
+      );
 
-  if (
-    paymentMethod ===
-    "RAZORPAY"
-  ) {
-    await handleRazorpayPayment(
-      orderData
+      setLoading(false);
+
+      return;
+    }
+
+    const response =
+      await createOrder(orderData);
+
+    if (response.success) {
+      clearCart();
+
+      localStorage.removeItem(
+        "cart"
+      );
+
+      navigate("/order-success");
+    } else {
+      toast.error(
+        response.message ||
+          "Order Failed"
+      );
+    }
+  } catch (error) {
+    console.log(error);
+
+    toast.error(
+      "Order Failed"
     );
-
+  } finally {
     setLoading(false);
-
-    return;
   }
- };
+};
 
   return (
     <div
