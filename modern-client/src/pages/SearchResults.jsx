@@ -59,7 +59,7 @@ const SearchResults = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
-        "${import.meta.env.VITE_API_URL}/category/all-category",
+        `${import.meta.env.VITE_API_URL}/category/all-category`,
       );
 
       console.log(response.data);
@@ -75,7 +75,7 @@ const SearchResults = () => {
       setLoading(true);
 
       const response = await axios.post(
-        "${import.meta.env.VITE_API_URL}/product/filter-products",
+        `${import.meta.env.VITE_API_URL}/product/filter-products`,
         {
           category: selectedCategory,
           minPrice,

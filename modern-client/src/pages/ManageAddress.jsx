@@ -39,7 +39,7 @@ function ManageAddress() {
         const localUser = JSON.parse(localStorage.getItem("user"));
 
         const response = await axios.post(
-          "${import.meta.env.VITE_API_URL}/user/single-user",
+          `${import.meta.env.VITE_API_URL}/user/single-user`,
           {
             uId: localUser.user._id,
           },
@@ -70,7 +70,7 @@ function ManageAddress() {
 
       if (editingAddressId) {
         response = await axios.post(
-          "${import.meta.env.VITE_API_URL}/user/edit-address",
+          `${import.meta.env.VITE_API_URL}/user/edit-address`,
           {
             uId: localUser.user._id,
 
@@ -84,7 +84,7 @@ function ManageAddress() {
       // ADD
       else {
         response = await axios.post(
-          "${import.meta.env.VITE_API_URL}/user/add-address",
+          `${import.meta.env.VITE_API_URL}/user/add-address`,
           {
             uId: localUser.user._id,
 
@@ -139,7 +139,7 @@ function ManageAddress() {
       const localUser = JSON.parse(localStorage.getItem("user"));
 
       const response = await axios.post(
-        "${import.meta.env.VITE_API_URL}/user/delete-address",
+        `${import.meta.env.VITE_API_URL}/user/delete-address`,
         {
           uId: localUser.user._id,
 

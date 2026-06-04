@@ -40,7 +40,7 @@ function ManageCoupons() {
   const fetchCoupons = async () => {
     try {
       const response = await axios.get(
-        "${import.meta.env.VITE_API_URL}/coupon/all-coupons",
+        `${import.meta.env.VITE_API_URL}/coupon/all-coupons`,
       );
 
       if (response.data.success) {
@@ -66,7 +66,7 @@ function ManageCoupons() {
       setLoading(true);
 
       const response = await axios.post(
-        "${import.meta.env.VITE_API_URL}/coupon/create-coupon",
+        `${import.meta.env.VITE_API_URL}/coupon/create-coupon`,
 
         formData,
       );

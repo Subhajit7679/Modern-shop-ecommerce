@@ -105,7 +105,7 @@ function ProductDetails() {
 
     try {
       const response = await axios.post(
-        "${import.meta.env.VITE_API_URL}/product/add-review",
+        `${import.meta.env.VITE_API_URL}/product/add-review`,
         {
           productId: product._id,
           user: "Subhajit",

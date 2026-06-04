@@ -13,7 +13,7 @@ function MyOrders() {
         const localUser = JSON.parse(localStorage.getItem("user"));
 
         const response = await axios.post(
-          "${import.meta.env.VITE_API_URL}/order/order-by-user",
+          `${import.meta.env.VITE_API_URL}/order/order-by-user`,
           {
             uId: localUser.user._id,
           },

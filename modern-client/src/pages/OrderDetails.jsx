@@ -28,7 +28,7 @@ function OrderDetails() {
   const cancelOrder = async () => {
     try {
       const response = await axios.post(
-        "${import.meta.env.VITE_API_URL}/order/update-order",
+        `${import.meta.env.VITE_API_URL}/order/update-order`,
         {
           oId: order._id,
           status: "Cancelled",
@@ -128,7 +128,7 @@ function OrderDetails() {
     const fetchOrder = async () => {
       try {
         const response = await axios.post(
-          "${import.meta.env.VITE_API_URL}/order/single-order",
+          `${import.meta.env.VITE_API_URL}/order/single-order`,
           {
             orderId: id,
           },

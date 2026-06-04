@@ -69,7 +69,7 @@ function Cart() {
   const applyCoupon = async () => {
     try {
       const response = await axios.post(
-        "${import.meta.env.VITE_API_URL}/coupon/apply-coupon",
+        `${import.meta.env.VITE_API_URL}/coupon/apply-coupon`,
 
         {
           code: couponCode,
