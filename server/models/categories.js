@@ -7,6 +7,12 @@ const categorySchema = new mongoose.Schema(
       required: true,
     },
 
+    cGender: {
+      type: [String],
+      enum: ["Men", "Women", "Unisex"],
+      default: ["Unisex"],
+    },
+
     cDescription: {
       type: String,
       default: "",
@@ -22,7 +28,7 @@ const categorySchema = new mongoose.Schema(
       default: "Active",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const categoryModel = mongoose.model("categories", categorySchema);

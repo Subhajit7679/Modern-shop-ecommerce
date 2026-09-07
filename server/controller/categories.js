@@ -20,7 +20,7 @@ class Category {
     try {
       console.log(req.body);
 
-      let { cName } = req.body;
+      let { cName, cGender } = req.body;
 
       if (!cName) {
         return res.json({
@@ -30,6 +30,7 @@ class Category {
 
       const newCategory = new categoryModel({
         cName,
+        cGender,
       });
 
       console.log(newCategory);

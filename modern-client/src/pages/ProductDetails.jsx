@@ -280,40 +280,30 @@ function ProductDetails() {
           </div>
 
           {/* CART */}
-{/* CART */}
+          {/* CART */}
 
-<div className="mt-10">
-
-  {quantity > 0 ? (
-
-    <div
-      className="
+          <div className="mt-10">
+            {quantity > 0 ? (
+              <div
+                className="
         flex
         flex-wrap
         items-center
         gap-5
       "
-    >
+              >
+                {/* QUANTITY CONTROLS */}
 
-      {/* QUANTITY CONTROLS */}
-
-      <div
-        className="
+                <div
+                  className="
           flex
           items-center
           gap-5
         "
-      >
-
-        <button
-          onClick={() =>
-            decreaseQuantity(
-              product._id,
-              selectedSize
-            )
-          }
-
-          className="
+                >
+                  <button
+                    onClick={() => decreaseQuantity(product._id, selectedSize)}
+                    className="
             bg-white
             text-black
             w-12
@@ -322,23 +312,22 @@ function ProductDetails() {
             text-2xl
             font-bold
           "
-        >
-          -
-        </button>
+                  >
+                    -
+                  </button>
 
-        <span
-          className="
+                  <span
+                    className="
             text-2xl
             font-bold
           "
-        >
-          {quantity}
-        </span>
+                  >
+                    {quantity}
+                  </span>
 
-        <button
-          onClick={handleIncrease}
-
-          className="
+                  <button
+                    onClick={handleIncrease}
+                    className="
             bg-white
             text-black
             w-12
@@ -347,20 +336,16 @@ function ProductDetails() {
             text-2xl
             font-bold
           "
-        >
-          +
-        </button>
+                  >
+                    +
+                  </button>
+                </div>
 
-      </div>
+                {/* VIEW CART */}
 
-      {/* VIEW CART */}
-
-      <button
-        onClick={() =>
-          navigate("/cart")
-        }
-
-        className="
+                <button
+                  onClick={() => navigate("/cart")}
+                  className="
           bg-green-500
           text-white
           px-8
@@ -370,18 +355,14 @@ function ProductDetails() {
           hover:scale-105
           transition
         "
-      >
-        View Cart
-      </button>
-
-    </div>
-
-  ) : totalStock === 0 ? (
-
-    <button
-      disabled
-
-      className="
+                >
+                  View Cart
+                </button>
+              </div>
+            ) : totalStock === 0 ? (
+              <button
+                disabled
+                className="
         bg-red-500/20
         text-red-400
         px-10
@@ -391,41 +372,26 @@ function ProductDetails() {
         text-lg
         cursor-not-allowed
       "
-    >
-      Out Of Stock
-    </button>
+              >
+                Out Of Stock
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  if (!selectedSize) {
+                    return toast.error("Please select size");
+                  }
 
-  ) : (
+                  addToCart({
+                    ...product,
 
-    <button
-      onClick={() => {
+                    quantity: 1,
 
-        if (!selectedSize) {
-
-          return toast.error(
-            "Please select size"
-          );
-
-        }
-
-        addToCart({
-
-          ...product,
-
-          quantity: 1,
-
-          selectedSize,
-
-        });
-
-      }}
-
-      disabled={
-        selectedSize &&
-        selectedSizeStock <= 0
-      }
-
-      className="
+                    selectedSize,
+                  });
+                }}
+                disabled={selectedSize && selectedSizeStock <= 0}
+                className="
         bg-white
         text-black
         px-10
@@ -439,14 +405,11 @@ function ProductDetails() {
         disabled:text-zinc-400
         disabled:cursor-not-allowed
       "
-    >
-      Add To Cart
-    </button>
-
-  )}
-
-</div>
-          
+              >
+                Add To Cart
+              </button>
+            )}
+          </div>
 
           {/* WISHLIST */}
           <button

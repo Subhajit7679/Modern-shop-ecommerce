@@ -15,14 +15,10 @@ function Admin() {
     pName: "",
     pDescription: "",
     pPrice: "",
+    pGender: "Unisex",
     pCategory: "",
 
-    pSizes: [
-      { size: "S", quantity: 0 },
-      { size: "M", quantity: 0 },
-      { size: "L", quantity: 0 },
-      { size: "XL", quantity: 0 },
-    ],
+    pSizes: [],
 
     pImages: [],
   });
@@ -37,21 +33,64 @@ function Admin() {
     fetchCategories();
   }, []);
 
+  const filteredCategories = categories.filter((category) =>
+    category.cGender?.includes(formData.pGender),
+  );
+
+  useEffect(() => {
+    const selectedCategory = categories.find(
+      (category) => category._id === formData.pCategory,
+    );
+
+    const categoryName = selectedCategory?.cName?.trim().toLowerCase();
+
+    let sizeOptions = [];
+
+    if (categoryName === "shoes") {
+      sizeOptions = ["6", "7", "8", "9", "10", "11", "12"];
+    } else if (categoryName === "jeans") {
+      sizeOptions = ["28", "30", "32", "34", "36", "38"];
+    } else if (["t-shirt", "shirt", "dress"].includes(categoryName)) {
+      sizeOptions = ["S", "M", "L", "XL", "XXL"];
+    } else if (categoryName) {
+      sizeOptions = ["One Size"];
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      pSizes: sizeOptions.map((size) => ({
+        size,
+        quantity: 0,
+      })),
+    }));
+  }, [formData.pCategory, categories]);
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
     // MULTIPLE IMAGES
     if (name === "pImages") {
-      setFormData({
-        ...formData,
-        pImages: [...files],
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
+      setFormData((prev) => ({
+        ...prev,
+        pImages: [...prev.pImages, ...Array.from(files)],
+      }));
+      return;
     }
+
+    // RESET CATEGORY WHEN GENDER CHANGES
+    if (name === "pGender") {
+      setFormData({
+        ...formData,
+        pGender: value,
+        pCategory: "",
+      });
+      return;
+    }
+
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -65,6 +104,8 @@ function Admin() {
       data.append("pDescription", formData.pDescription);
 
       data.append("pPrice", formData.pPrice);
+
+      data.append("pGender", formData.pGender);
 
       data.append("pCategory", formData.pCategory);
 
@@ -86,14 +127,10 @@ function Admin() {
         pName: "",
         pDescription: "",
         pPrice: "",
+        pGender: "Unisex",
         pCategory: "",
 
-        pSizes: [
-          { size: "S", quantity: 0 },
-          { size: "M", quantity: 0 },
-          { size: "L", quantity: 0 },
-          { size: "XL", quantity: 0 },
-        ],
+        pSizes: [],
 
         pImages: [],
       });
@@ -135,6 +172,18 @@ function Admin() {
               className="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 outline-none"
             />
 
+            {/* GENDER */}
+            <select
+              name="pGender"
+              value={formData.pGender}
+              onChange={handleChange}
+              className="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 outline-none"
+            >
+              <option value="Unisex">Unisex</option>
+              <option value="Men">Men</option>
+              <option value="Women">Women</option>
+            </select>
+
             {/* CATEGORY */}
             <select
               name="pCategory"
@@ -144,7 +193,7 @@ function Admin() {
             >
               <option value="">Select Category</option>
 
-              {categories?.map((category) => (
+              {filteredCategories.map((category) => (
                 <option key={category._id} value={category._id}>
                   {category.cName}
                 </option>
@@ -204,12 +253,27 @@ function Admin() {
             {/* IMAGE PREVIEW */}
             <div className="flex gap-4 flex-wrap mt-4">
               {formData.pImages.map((img, index) => (
-                <img
-                  key={index}
-                  src={URL.createObjectURL(img)}
-                  alt="preview"
-                  className="w-28 h-28 object-cover rounded-2xl border border-zinc-700"
-                />
+                <div key={index} className="relative">
+                  <img
+                    src={URL.createObjectURL(img)}
+                    alt={`preview ${index + 1}`}
+                    className="w-28 h-28 object-cover rounded-2xl border border-zinc-700"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        pImages: prev.pImages.filter((_, i) => i !== index),
+                      }));
+                    }}
+                    className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-600 text-white text-sm font-bold flex items-center justify-center hover:bg-red-700 transition"
+                    title="Remove image"
+                  >
+                    ×
+                  </button>
+                </div>
               ))}
             </div>
 

@@ -14,6 +14,13 @@ function Sidebar() {
       path: "/admin/add-product",
     },
 
+    /*
+    {
+      name: "Add Category",
+      path: "/admin/add-category",
+    },
+    */
+
     {
       name: "Manage Products",
       path: "/admin/manage-products",

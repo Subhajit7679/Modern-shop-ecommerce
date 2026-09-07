@@ -92,7 +92,14 @@ function App() {
           }
         />
 
-        <Route path="/add-category" element={<AddCategory />} />
+        <Route
+          path="/admin/add-category"
+          element={
+            <AdminRoute>
+              <AddCategory />
+            </AdminRoute>
+          }
+        />
         <Route
           path="/cart"
           element={

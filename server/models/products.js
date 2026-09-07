@@ -24,6 +24,12 @@ const productSchema = new mongoose.Schema(
       default: 0,
     },
 
+    pGender: {
+      type: String,
+      enum: ["Men", "Women", "Unisex"],
+      default: "Unisex",
+    },
+
     // SIZE INVENTORY
     pSizes: [
       {

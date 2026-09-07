@@ -64,7 +64,7 @@ class Product {
     try {
       console.log(req.body);
 
-      let { pName, pDescription, pPrice, pCategory } = req.body;
+      let { pName, pDescription, pPrice, pCategory, pGender } = req.body;
 
       // MULTIPLE IMAGES
       let pImages = req.files?.length
@@ -84,13 +84,13 @@ class Product {
         pDescription,
         pPrice,
         pCategory,
+        pGender,
 
         pSizes: JSON.parse(req.body.pSizes),
 
         pOffer: "No",
         pStatus: "Active",
 
-        // SAVE MULTIPLE IMAGES
         pImages,
       });
 
