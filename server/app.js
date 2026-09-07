@@ -17,6 +17,7 @@ go user model and see the role field.
 */
 
 const express = require("express");
+const path = require("path");
 const app = express();
 require("dotenv").config();
 const mongoose = require("mongoose");
@@ -70,7 +71,11 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "public", "uploads"))
+);
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
