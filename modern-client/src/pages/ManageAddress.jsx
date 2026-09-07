@@ -61,7 +61,26 @@ function ManageAddress() {
   // =========================
 
   const handleSaveAddress = async () => {
-    try {
+  const requiredFields = [
+    { key: "fullName", label: "Full Name" },
+    { key: "phone", label: "Phone" },
+    { key: "pincode", label: "Pincode" },
+    { key: "state", label: "State" },
+    { key: "city", label: "City" },
+    { key: "house", label: "House / Flat" },
+    { key: "area", label: "Area" },
+  ];
+
+  const emptyField = requiredFields.find(
+    (field) => !addressData[field.key]?.trim()
+  );
+
+  if (emptyField) {
+    toast.error(`Please fill in ${emptyField.label}`);
+    return;
+  }
+
+  try {
       const localUser = JSON.parse(localStorage.getItem("user"));
 
       let response;

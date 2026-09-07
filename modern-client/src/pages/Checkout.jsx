@@ -90,248 +90,186 @@ function Checkout() {
   // PLACE ORDER
   // =========================
   const loadRazorpay = () => {
-  return new Promise((resolve) => {
-    const script =
-      document.createElement("script");
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
 
-     script.src =
-      "https://checkout.razorpay.com/v1/checkout.js";
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
 
-     script.onload = () =>
-      resolve(true);
+      script.onload = () => resolve(true);
 
-     script.onerror = () =>
-      resolve(false);
+      script.onerror = () => resolve(false);
 
-     document.body.appendChild(
-      script
-     );
+      document.body.appendChild(script);
     });
   };
 
+  const handleRazorpayPayment = async (orderData) => {
+    try {
+      const loaded = await loadRazorpay();
 
- const handleRazorpayPayment = async (orderData) => {
-   try {
-    const loaded = await loadRazorpay();
+      if (!loaded) {
+        toast.error("Razorpay SDK Failed");
+        return;
+      }
 
-    if (!loaded) {
-      toast.error("Razorpay SDK Failed");
-      return;
-    }
+      const razorpayResponse = await createRazorpayOrder(grandTotal);
 
-    const razorpayResponse =
-      await createRazorpayOrder(
-        grandTotal
-      );
+      if (!razorpayResponse.success) {
+        toast.error("Unable to create payment");
+        return;
+      }
 
-     if (
-      !razorpayResponse.success
-     ) {
-      toast.error(
-        "Unable to create payment"
-      );
-      return;
-    }
+      const razorpayOrder = razorpayResponse.order;
 
-    const razorpayOrder =
-      razorpayResponse.order;
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
 
-    const options = {
-      key:
-        import.meta.env
-          .VITE_RAZORPAY_KEY_ID,
+        amount: razorpayOrder.amount,
 
-      amount:
-        razorpayOrder.amount,
+        currency: razorpayOrder.currency,
 
-      currency:
-        razorpayOrder.currency,
+        name: "Your Ecommerce",
 
-      name: "Your Ecommerce",
+        description: "Order Payment",
 
-      description:
-        "Order Payment",
+        order_id: razorpayOrder.id,
 
-      order_id:
-        razorpayOrder.id,
+        handler: async function (response) {
+          const verifyResponse = await verifyPayment({
+            razorpay_order_id: response.razorpay_order_id,
 
-      handler:
-        async function (
-          response
-        ) {
-          const verifyResponse =
-            await verifyPayment({
-              razorpay_order_id:
-                response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
 
-              razorpay_payment_id:
-                response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
 
-              razorpay_signature:
-                response.razorpay_signature,
-            });
-
-          if (
-            !verifyResponse.success
-          ) {
-            toast.error(
-              "Payment Verification Failed"
-            );
+          if (!verifyResponse.success) {
+            toast.error("Payment Verification Failed");
 
             return;
           }
 
-          orderData.transactionId =
-            response.razorpay_payment_id;
+          orderData.transactionId = response.razorpay_payment_id;
 
-          orderData.paymentStatus =
-            "Paid";
+          orderData.paymentStatus = "Paid";
 
-          const orderResponse =
-            await createOrder(
-              orderData
-            );
+          const orderResponse = await createOrder(orderData);
 
-          if (
-            orderResponse.success
-          ) {
+          if (orderResponse.success) {
             clearCart();
 
-            localStorage.removeItem(
-              "cart"
-            );
+            localStorage.removeItem("cart");
             setLoading(false);
-            navigate(
-              "/order-success"
-            );
+            navigate("/order-success");
           } else {
-            toast.error(
-              "Order Failed"
-            );
+            toast.error("Order Failed");
           }
         },
 
-      prefill: {
-        name:
-          selectedAddress?.fullName,
+        prefill: {
+          name: selectedAddress?.fullName,
 
-        contact:
-          selectedAddress?.phone,
+          contact: selectedAddress?.phone,
 
-        email:
-          user?.user?.email,
-      },
+          email: user?.user?.email,
+        },
 
-      theme: {
-        color: "#000000",
-      },
-    };
+        theme: {
+          color: "#000000",
+        },
+      };
 
-    const paymentObject =
-      new window.Razorpay(
-        options
-      );
+      const paymentObject = new window.Razorpay(options);
 
-     paymentObject.open();
-     } catch (error) {
-     console.log(error);
+      paymentObject.open();
+    } catch (error) {
+      console.log(error);
 
-     toast.error(
-      "Payment Failed"
-     );
-     }
- };
-
-
-
- const handleOrder = async () => {
-  const confirmOrder = window.confirm(
-    "Confirm your order?"
-  );
-
-  if (!confirmOrder) return;
-
-  if (!selectedAddress) {
-    return toast.error(
-      "Please select address"
-    );
-  }
-
-  setLoading(true);
-
-  const orderData = {
-    allProduct: cart.map((item) => ({
-      id: item._id,
-      quantity: item.quantity,
-      selectedSize: item.selectedSize,
-    })),
-
-    user: user.user._id,
-
-    amount: grandTotal,
-
-    transactionId:
-      paymentMethod === "COD"
-        ? "COD_" + Date.now()
-        : "",
-
-    orderId: "ORD-" + Date.now(),
-
-    shippingAddress:
-      selectedAddress,
-
-    paymentMethod,
-
-    paymentStatus:
-      paymentMethod === "COD"
-        ? "Pending"
-        : "Paid",
-
-    estimatedDelivery:
-      new Date(
-        Date.now() +
-          7 * 24 * 60 * 60 * 1000
-      ),
+      toast.error("Payment Failed");
+    }
   };
 
-  try {
-    if (paymentMethod === "RAZORPAY") {
-      await handleRazorpayPayment(
-        orderData
-      );
-
-      setLoading(false);
-
-      return;
+  const handleOrder = async () => {
+    if (!selectedAddress) {
+      return toast.error("Please select address");
     }
 
-    const response =
-      await createOrder(orderData);
+    const requiredFields = [
+      { key: "fullName", label: "Full Name" },
+      { key: "phone", label: "Phone" },
+      { key: "pincode", label: "Pincode" },
+      { key: "state", label: "State" },
+      { key: "city", label: "City" },
+      { key: "house", label: "House / Flat" },
+      { key: "area", label: "Area" },
+    ];
 
-    if (response.success) {
-      clearCart();
-
-      localStorage.removeItem(
-        "cart"
-      );
-
-      navigate("/order-success");
-    } else {
-      toast.error(
-        response.message ||
-          "Order Failed"
-      );
-    }
-  } catch (error) {
-    console.log(error);
-
-    toast.error(
-      "Order Failed"
+    const emptyField = requiredFields.find(
+      (field) => !selectedAddress[field.key]?.trim(),
     );
-  } finally {
-    setLoading(false);
-  }
-};
+
+    if (emptyField) {
+      return toast.error(`Please fill in ${emptyField.label} in your address`);
+    }
+
+    const confirmOrder = window.confirm("Confirm your order?");
+
+    if (!confirmOrder) return;
+
+    setLoading(true);
+
+    const orderData = {
+      allProduct: cart.map((item) => ({
+        id: item._id,
+        quantity: item.quantity,
+        selectedSize: item.selectedSize,
+      })),
+
+      user: user.user._id,
+
+      amount: grandTotal,
+
+      transactionId: paymentMethod === "COD" ? "COD_" + Date.now() : "",
+
+      orderId: "ORD-" + Date.now(),
+
+      shippingAddress: selectedAddress,
+
+      paymentMethod,
+
+      paymentStatus: paymentMethod === "COD" ? "Pending" : "Paid",
+
+      estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    };
+
+    try {
+      if (paymentMethod === "RAZORPAY") {
+        await handleRazorpayPayment(orderData);
+
+        setLoading(false);
+
+        return;
+      }
+
+      const response = await createOrder(orderData);
+
+      if (response.success) {
+        clearCart();
+
+        localStorage.removeItem("cart");
+
+        navigate("/order-success");
+      } else {
+        toast.error(response.message || "Order Failed");
+      }
+    } catch (error) {
+      console.log(error);
+
+      toast.error("Order Failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -416,11 +354,11 @@ function Checkout() {
 
                 <button
                   onClick={() =>
-                     navigate("/manage-address", {
-                       state: {
-                      fromCheckout: true,
-                        },
-                         })
+                    navigate("/manage-address", {
+                      state: {
+                        fromCheckout: true,
+                      },
+                    })
                   }
                   className="
                     text-sm
@@ -459,11 +397,11 @@ function Checkout() {
 
                   <button
                     onClick={() =>
-                     navigate("/manage-address", {
-                      state: {
-                      fromCheckout: true,
-                      },
-                       })
+                      navigate("/manage-address", {
+                        state: {
+                          fromCheckout: true,
+                        },
+                      })
                     }
                     className="
                       mt-4
