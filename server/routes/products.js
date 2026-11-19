@@ -37,6 +37,15 @@ router.get("/single-product/:id", async (req, res) => {
 router.post(
   "/add-product",
   upload.array("pImages", 5),
+  (req, res, next) => {
+    console.log("========== IMAGE UPLOAD CHECK ==========");
+    console.log("Files received:", req.files?.length);
+    console.log("Uploaded files:", req.files?.map(file => file.path));
+    console.log("Product data:", req.body);
+    console.log("========================================");
+
+    next();
+  },
   productController.postAddProduct
 );
 
