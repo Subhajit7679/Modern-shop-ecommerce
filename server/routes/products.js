@@ -34,20 +34,31 @@ router.get("/single-product/:id", async (req, res) => {
 
 /* ADD PRODUCT */
 
-router.post(
-  "/add-product",
-  upload.array("pImages", 5),
-  (req, res, next) => {
-    console.log("========== IMAGE UPLOAD CHECK ==========");
-    console.log("Files received:", req.files?.length);
-    console.log("Uploaded files:", req.files?.map(file => file.path));
-    console.log("Product data:", req.body);
-    console.log("========================================");
 
-    next();
-  },
-  productController.postAddProduct
-);
+router.post("/add-product", (req, res, next) => {
+  upload.array("pImages", 5)(req, res, (err) => {
+    if (err) {
+      console.error("========== CLOUDINARY UPLOAD ERROR ==========");
+      console.error("Error name:", err.name);
+      console.error("Error message:", err.message);
+      console.error("Full error:", err);
+      console.error("==============================================");
+
+      return res.status(500).json({
+        success: false,
+        error: err.message || "Image upload failed",
+      });
+    }
+
+    console.log("========== IMAGE UPLOAD SUCCESS ==========");
+    console.log("Files received:", req.files?.length);
+    console.log("Image URLs:", req.files?.map(file => file.path));
+    console.log("==========================================");
+
+    return productController.postAddProduct(req, res, next);
+  });
+});
+
 
 
 
