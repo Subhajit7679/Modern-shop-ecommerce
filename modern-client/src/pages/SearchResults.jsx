@@ -4,6 +4,26 @@ import axios from "axios";
 
 import { useLocation, Link } from "react-router-dom";
 
+
+const PRODUCT_IMAGE_BASE =
+  "https://modern-shop-backend-hfi9.onrender.com";
+
+const getProductImageUrl = (image) => {
+  if (!image) {
+    return "https://placehold.co/600x600?text=No+Image";
+  }
+
+  if (image.startsWith("http")) {
+    return image;
+  }
+
+  if (image.startsWith("/")) {
+    return `${PRODUCT_IMAGE_BASE}${image}`;
+  }
+
+  return `${PRODUCT_IMAGE_BASE}/uploads/products/${image}`;
+};
+
 const SearchResults = () => {
   const location = useLocation();
 
@@ -210,10 +230,15 @@ const SearchResults = () => {
           >
             {/* IMAGE */}
             <img
-              src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.pImages[0]}`}
-              alt={item.pName}
-              className="h-72 w-full object-cover"
-            />
+  src={getProductImageUrl(item.pImages?.[0])}
+  alt={item.pName || "Product"}
+  onError={(e) => {
+    e.currentTarget.onerror = null;
+    e.currentTarget.src =
+      "https://placehold.co/600x600?text=Image+Not+Available";
+  }}
+  className="h-72 w-full object-cover"
+/>
 
             {/* CONTENT */}
             <div className="p-5">
