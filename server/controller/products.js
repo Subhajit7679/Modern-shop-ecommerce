@@ -1,48 +1,101 @@
 const productModel = require("../models/products");
-const fs = require("fs");
-const path = require("path");
+const cloudinary = require("../config/cloudinary");
 
 class Product {
   // Delete Image from uploads -> products folder
-  static deleteImages(images, mode) {
-    var basePath =
-      path.resolve(__dirname + "../../") + "/public/uploads/products/";
-    console.log(basePath);
-    for (var i = 0; i < images.length; i++) {
-      let filePath = "";
-      if (mode == "file") {
-        filePath = basePath + `${images[i].filename}`;
-      } else {
-        filePath = basePath + `${images[i]}`;
-      }
-      console.log(filePath);
-      if (fs.existsSync(filePath)) {
-        console.log("Exists image");
-      }
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          return err;
-        }
-      });
-    }
-  }
-
-  async productCount(req, res) {
+  
+static async deleteImages(images = []) {
+  for (const image of images) {
     try {
-      const totalProducts = await productModel.countDocuments();
+      // Keep old local filenames untouched.
+      if (
+        !image ||
+        typeof image !== "string" ||
+        !image.includes("res.cloudinary.com")
+      ) {
+        continue;
+      }
 
-      return res.json({
-        success: true,
-        totalProducts,
-      });
-    } catch (err) {
-      console.log(err);
+      const url = new URL(image);
+      const uploadIndex = url.pathname.indexOf("/upload/");
 
-      return res.status(500).json({
-        success: false,
-      });
+      if (uploadIndex === -1) continue;
+
+      const pathAfterUpload = url.pathname
+        .substring(uploadIndex + 8)
+        .split("/");
+
+      // Find the Cloudinary version segment.
+      const versionIndex = pathAfterUpload.findIndex((part) =>
+        /^v\d+$/.test(part)
+      );
+
+      if (versionIndex === -1) continue;
+
+      const publicId = pathAfterUpload
+        .slice(versionIndex + 1)
+        .join("/")
+        .replace(/\.[^/.]+$/, "");
+
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId);
+      }
+    } catch (error) {
+      console.error("Cloudinary image deletion failed:", error.message);
     }
   }
+}
+
+  
+async postAddProduct(req, res) {
+  try {
+    const {
+      pName,
+      pDescription,
+      pPrice,
+      pCategory,
+      pGender,
+    } = req.body;
+
+    // Save Cloudinary image URLs
+    const pImages = req.files?.length
+      ? req.files.map((file) => file.path)
+      : ["default.png"];
+
+    if (!pName || !pDescription || !pPrice || !pCategory) {
+      return res.json({
+        error: "All fields required",
+      });
+    }
+
+    const newProduct = new productModel({
+      pName,
+      pDescription,
+      pPrice,
+      pCategory,
+      pGender,
+      pSizes: JSON.parse(req.body.pSizes),
+      pOffer: "No",
+      pStatus: "Active",
+      pImages,
+    });
+
+    await newProduct.save();
+
+    return res.json({
+      success: "Product created successfully",
+    });
+  } catch (err) {
+  console.error("ADD PRODUCT ERROR:", err);
+  console.error("Error message:", err?.message);
+  console.error("Cloudinary details:", err?.error);
+
+  return res.status(500).json({
+    error: err?.message || "Product save failed",
+  });
+}
+}
+
 
   async getAllProduct(req, res) {
     try {
@@ -60,156 +113,155 @@ class Product {
     }
   }
 
-  async postAddProduct(req, res) {
-    try {
-      console.log(req.body);
+ 
+  
 
-      let { pName, pDescription, pPrice, pCategory, pGender } = req.body;
+async postEditProduct(req, res) {
+  try {
+    const {
+      pId,
+      pName,
+      pDescription,
+      pPrice,
+      pSizes,
+      pCategory,
+      pOffer,
+      pStatus,
+      existingImages,
+    } = req.body;
 
-      // MULTIPLE IMAGES
-      let pImages = req.files?.length
-        ? req.files.map((file) => file.filename)
-        : ["default.png"];
+    const newImages = req.files || [];
 
-      // VALIDATION
-      if (!pName || !pDescription || !pPrice || !pCategory) {
-        return res.json({
-          error: "All fields required",
-        });
-      }
-
-      // CREATE PRODUCT
-      const newProduct = new productModel({
-        pName,
-        pDescription,
-        pPrice,
-        pCategory,
-        pGender,
-
-        pSizes: JSON.parse(req.body.pSizes),
-
-        pOffer: "No",
-        pStatus: "Active",
-
-        pImages,
-      });
-
-      await newProduct.save();
-
-      console.log("PRODUCT SAVED");
-
+    if (
+      !pId ||
+      !pName ||
+      !pDescription ||
+      !pPrice ||
+      !pCategory ||
+      !pStatus
+    ) {
       return res.json({
-        success: "Product created successfully",
-      });
-    } catch (err) {
-      console.log(err);
-
-      return res.json({
-        error: "Product save failed",
+        error: "All fields required",
       });
     }
-  }
 
-  async postEditProduct(req, res) {
-    try {
-      const {
-        pId,
-        pName,
-        pDescription,
-        pPrice,
-        pSizes,
-        pCategory,
-        pOffer,
-        pStatus,
-        pImages,
-      } = req.body;
+    // Find the existing product
+    const oldProduct = await productModel.findById(pId);
 
-      // SAFE FILES
-      const editImages = req.files || [];
+    if (!oldProduct) {
+      return res.status(404).json({
+        error: "Product not found",
+      });
+    }
 
-      // VALIDATION
-      if (
-        !pId ||
-        !pName ||
-        !pDescription ||
-        !pPrice ||
-        !pCategory ||
-        !pStatus
-      ) {
-        return res.json({
-          error: "All fields required",
+    // Read images that the admin wants to keep
+    let keptImages = oldProduct.pImages || [];
+
+    if (existingImages !== undefined) {
+      const parsedImages = JSON.parse(existingImages);
+
+      if (!Array.isArray(parsedImages)) {
+        return res.status(400).json({
+          error: "Invalid existing images",
         });
       }
 
-      // UPDATE OBJECT
-      let editData = {
-        pName,
-        pDescription,
-        pPrice,
-        pCategory,
-        pOffer,
-        pStatus,
-
-        // IMPORTANT
-        pSizes: JSON.parse(pSizes),
-      };
-
-      // IF NEW IMAGES UPLOADED
-      if (editImages.length > 0) {
-        const allEditImages = [];
-
-        for (const img of editImages) {
-          allEditImages.push(img.filename);
-        }
-
-        editData.pImages = allEditImages;
-
-        // DELETE OLD IMAGES
-        if (pImages) {
-          Product.deleteImages(pImages.split(","), "string");
-        }
-      }
-
-      // UPDATE PRODUCT
-      const updatedProduct = await productModel.findByIdAndUpdate(
-        pId,
-        editData,
-        {
-          new: true,
-        },
+      // Only allow images that already belong to this product
+      keptImages = parsedImages.filter((image) =>
+        (oldProduct.pImages || []).includes(image)
       );
+    }
 
-      return res.json({
-        success: "Product updated successfully",
-        product: updatedProduct,
-      });
-    } catch (err) {
-      console.log(err);
+    // Add newly uploaded Cloudinary image URLs
+    const newImageUrls = newImages.map((file) => file.path);
 
-      return res.status(500).json({
+    const finalImages = [...keptImages, ...newImageUrls];
+
+    const editData = {
+      pName,
+      pDescription,
+      pPrice,
+      pCategory,
+      pOffer,
+      pStatus,
+      pSizes: JSON.parse(pSizes),
+      pImages: finalImages.length > 0 ? finalImages : ["default.png"],
+    };
+
+    // Update product in MongoDB
+    const updatedProduct = await productModel.findByIdAndUpdate(
+      pId,
+      editData,
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({
         error: "Product update failed",
       });
     }
-  }
 
-  async getDeleteProduct(req, res) {
-    let { pId } = req.body;
-    if (!pId) {
-      return res.json({ error: "All filled must be required" });
-    } else {
-      try {
-        let deleteProductObj = await productModel.findById(pId);
-        let deleteProduct = await productModel.findByIdAndDelete(pId);
-        if (deleteProduct) {
-          // Delete Image from uploads -> products folder
-          Product.deleteImages(deleteProductObj.pImages, "string");
-          return res.json({ success: "Product deleted successfully" });
-        }
-      } catch (err) {
-        console.log(err);
-      }
+    // Delete only images removed by the admin
+    const removedImages = (oldProduct.pImages || []).filter(
+      (image) => !keptImages.includes(image)
+    );
+
+    if (removedImages.length > 0) {
+      await Product.deleteImages(removedImages);
     }
+
+    return res.json({
+      success: "Product updated successfully",
+      product: updatedProduct,
+    });
+  } catch (err) {
+    console.error("Product Update Error:", err);
+
+    return res.status(500).json({
+      error: "Product update failed",
+    });
   }
+}
+
+
+  
+async getDeleteProduct(req, res) {
+  try {
+    const { pId } = req.body;
+
+    if (!pId) {
+      return res.status(400).json({
+        error: "Product ID is required",
+      });
+    }
+
+    // Find product before deleting
+    const product = await productModel.findById(pId);
+
+    if (!product) {
+      return res.status(404).json({
+        error: "Product not found",
+      });
+    }
+
+    // Delete product from MongoDB
+    await productModel.findByIdAndDelete(pId);
+
+    // Delete its Cloudinary images
+    await Product.deleteImages(product.pImages || []);
+
+    return res.json({
+      success: "Product deleted successfully",
+    });
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      error: "Product deletion failed",
+    });
+  }
+}
+
 
   async getSingleProduct(req, res) {
     let { pId } = req.body;

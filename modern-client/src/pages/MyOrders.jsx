@@ -2,6 +2,19 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const PRODUCT_IMAGE_BASE =
+  "https://modern-shop-backend-hfi9.onrender.com/uploads/products/";
+
+const getProductImageUrl = (image) => {
+  if (!image) {
+    return "https://placehold.co/600x600?text=No+Image";
+  }
+
+  return image.startsWith("http")
+    ? image
+    : `${PRODUCT_IMAGE_BASE}${image}`;
+};
+
 function MyOrders() {
   const [orders, setOrders] = useState([]);
 
@@ -251,7 +264,7 @@ function MyOrders() {
                     {/* IMAGE */}
 
                     <img
-                      src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.id?.pImages?.[0]}`}
+                      src={getProductImageUrl(item.id?.pImages?.[0])}
                       alt=""
                       className="
                           w-28

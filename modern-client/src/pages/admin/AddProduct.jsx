@@ -118,9 +118,14 @@ function Admin() {
 
       const response = await addProduct(data);
 
-      console.log(response);
+console.log("ADD PRODUCT RESPONSE:", response);
 
-      toast.success("Product Added Successfully");
+if (!response || response.error || response.success === false) {
+  toast.error(response?.error || "Product Upload Failed");
+  return;
+}
+
+toast.success(response.success || "Product Added Successfully");
 
       // RESET FORM
       setFormData({

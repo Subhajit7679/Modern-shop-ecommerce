@@ -19,6 +19,7 @@ function EditProduct() {
   const [categories, setCategories] = useState([]);
 
   const [product, setProduct] = useState(null);
+  const [existingImages, setExistingImages] = useState([]);
 
   const [formData, setFormData] = useState({
     pName: "",
@@ -41,6 +42,7 @@ function EditProduct() {
 
       if (response.product) {
         setProduct(response.product);
+        setExistingImages(response.product.pImages || []);
 
         setFormData({
           pName: response.product.pName || "",
@@ -55,7 +57,9 @@ function EditProduct() {
 
           pStatus: response.product.pStatus || "",
 
-          pImages: response.product.pImages || [],
+          pImages: [],
+          
+          
 
           pSizes: response.product.pSizes || [
             { size: "S", quantity: 0 },
@@ -116,15 +120,13 @@ function EditProduct() {
 
       data.append("pSizes", JSON.stringify(formData.pSizes));
 
-      // IMPORTANT
+      // EXISTING IMAGES TO KEEP
+data.append("existingImages", JSON.stringify(existingImages));
 
-      // OLD IMAGES
-      data.append("pImages", product.pImages);
-
-      // NEW IMAGES
-      formData.pImages.forEach((img) => {
-        data.append("pImages", img);
-      });
+// NEW IMAGES TO UPLOAD
+formData.pImages.forEach((img) => {
+  data.append("pImages", img);
+});
 
       const response = await updateProduct(data);
 
@@ -152,18 +154,23 @@ function EditProduct() {
         <h1 className="text-5xl font-black mb-10">Edit Product</h1>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-4xl">
+
           {/* EXISTING IMAGES */}
 
-          <div className="flex gap-4 flex-wrap mb-6">
-            {product?.pImages?.map((img, index) => (
-              <img
-                key={index}
-                src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${img}`}
-                alt=""
-                className="w-28 h-28 object-cover rounded-2xl"
-              />
-            ))}
-          </div>
+<div className="flex gap-4 flex-wrap mb-6">
+  {existingImages.map((img, index) => (
+    <img
+      key={index}
+      src={
+        img?.startsWith("http")
+          ? img
+          : `https://modern-shop-backend-hfi9.onrender.com/uploads/products/${img}`
+      }
+      alt={`Existing product ${index + 1}`}
+      className="w-28 h-28 object-cover rounded-2xl border border-zinc-700"
+    />
+  ))}
+</div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <input

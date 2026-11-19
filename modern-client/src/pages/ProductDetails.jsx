@@ -10,6 +10,19 @@ import { CartContext } from "../context/CartContext";
 import { WishlistContext } from "../context/WishlistContext";
 import toast from "react-hot-toast";
 
+const PRODUCT_IMAGE_BASE =
+  "https://modern-shop-backend-hfi9.onrender.com/uploads/products/";
+
+const getProductImageUrl = (image) => {
+  if (!image) {
+    return "https://placehold.co/600x600?text=No+Image";
+  }
+
+  return image.startsWith("http")
+    ? image
+    : `${PRODUCT_IMAGE_BASE}${image}`;
+};
+
 function ProductDetails() {
   const { id } = useParams();
 
@@ -150,11 +163,7 @@ function ProductDetails() {
           {/* MAIN IMAGE */}
           <div className="overflow-hidden rounded-3xl border border-zinc-800">
             <img
-              src={
-                selectedImage
-                  ? `https://modern-shop-backend-hfi9.onrender.com/uploads/products/${selectedImage}`
-                  : "https://placehold.co/600x600?text=No+Image"
-              }
+              src={getProductImageUrl(selectedImage)}
               alt={product.pName}
               className="w-full h-[600px] object-cover hover:scale-110 transition duration-500"
             />
@@ -171,7 +180,7 @@ function ProductDetails() {
                 }`}
               >
                 <img
-                  src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${img}`}
+                  src={getProductImageUrl(img)}
                   alt="thumbnail"
                   className="w-full h-full object-cover"
                 />
@@ -439,10 +448,10 @@ function ProductDetails() {
               className="bg-zinc-900 rounded-3xl overflow-hidden cursor-pointer hover:scale-105 transition"
             >
               <img
-                src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.pImages?.[0]}`}
-                alt={item.pName}
-                className="w-full h-72 object-cover"
-              />
+               src={getProductImageUrl(item.pImages?.[0])}
+               alt={item.pName}
+               className="w-full h-72 object-cover"
+             />
 
               <div className="p-5">
                 <h3 className="text-xl font-bold">{item.pName}</h3>

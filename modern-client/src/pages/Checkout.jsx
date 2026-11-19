@@ -15,6 +15,19 @@ import {
 } from "../services/orderService";
 import { useLocation } from "react-router-dom";
 
+const PRODUCT_IMAGE_BASE =
+  "https://modern-shop-backend-hfi9.onrender.com/uploads/products/";
+
+const getProductImageUrl = (image) => {
+  if (!image) {
+    return "https://placehold.co/600x600?text=No+Image";
+  }
+
+  return image.startsWith("http")
+    ? image
+    : `${PRODUCT_IMAGE_BASE}${image}`;
+};
+
 function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -629,13 +642,13 @@ function Checkout() {
                   "
                 >
                   <img
-                    src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.pImages?.[0]}`}
-                    alt=""
-                    className="
-                      w-20
-                      h-20
-                      object-cover
-                      rounded-2xl
+                   src={getProductImageUrl(item.pImages?.[0])}
+                   alt={item.pName}
+                   className="
+                   w-20
+                    h-20
+                    object-cover
+                    rounded-2xl
                     "
                   />
 

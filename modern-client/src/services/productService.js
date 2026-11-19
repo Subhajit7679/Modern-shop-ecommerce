@@ -38,19 +38,20 @@ export const getSingleProduct = async (id) => {
 export const addProduct = async (formData, token) => {
   try {
     const response = await axios.post(`${API}/add-product`, formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
-      },
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {},
     });
 
     return response.data;
   } catch (err) {
-    console.log(err);
+    console.log("Add Product Error:", err.response?.data || err.message);
 
     return {
       success: false,
-      error: "Add Product Failed",
+      error: err.response?.data?.error || "Add Product Failed",
     };
   }
 };
@@ -86,11 +87,7 @@ export const updateProduct = async (data) => {
     const response = await axios.put(
       `${API}/edit-product/${data.get("pId")}`,
       data,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
+     
     );
 
     return response.data;

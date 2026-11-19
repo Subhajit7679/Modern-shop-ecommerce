@@ -8,6 +8,20 @@ import { CartContext } from "../context/CartContext";
 
 import { useNavigate } from "react-router-dom";
 
+
+const PRODUCT_IMAGE_BASE =
+  "https://modern-shop-backend-hfi9.onrender.com/uploads/products/";
+
+const getProductImageUrl = (image) => {
+  if (!image) {
+    return "https://placehold.co/600x600?text=No+Image";
+  }
+
+  return image.startsWith("http")
+    ? image
+    : `${PRODUCT_IMAGE_BASE}${image}`;
+};
+
 function Cart() {
   const navigate = useNavigate();
 
@@ -179,17 +193,17 @@ function Cart() {
                   {/* IMAGE */}
 
                   <img
-                    src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.pImages?.[0]}`}
-                    alt={item.pName}
-                    className="
-                      w-full
-                      md:w-32
-                      h-72
-                      md:h-32
-                      object-cover
-                      rounded-2xl
-                    "
-                  />
+                  src={getProductImageUrl(item.pImages?.[0])}
+                       alt={item.pName}
+                       className="
+                       w-full
+                       md:w-32
+                       h-72
+                       md:h-32
+                        object-cover
+                       rounded-2xl
+                       "
+                      />
 
                   {/* INFO */}
 

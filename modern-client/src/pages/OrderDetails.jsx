@@ -7,6 +7,20 @@ import toast from "react-hot-toast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+const PRODUCT_IMAGE_BASE =
+  "https://modern-shop-backend-hfi9.onrender.com/uploads/products/";
+
+const getProductImageUrl = (image) => {
+  if (!image) {
+    return "https://placehold.co/600x600?text=No+Image";
+  }
+
+  return image.startsWith("http")
+    ? image
+    : `${PRODUCT_IMAGE_BASE}${image}`;
+};
+
+
 function OrderDetails() {
   const { id } = useParams();
 
@@ -350,7 +364,7 @@ function OrderDetails() {
                   {/* IMAGE */}
 
                   <img
-                    src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${item.id?.pImages?.[0]}`}
+                    src={getProductImageUrl(item.id?.pImages?.[0])}
                     alt=""
                     className="
                       w-32

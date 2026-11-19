@@ -93,11 +93,17 @@ function ManageProducts() {
                 <tr key={product._id} className="border-t border-zinc-800">
                   {/* IMAGE */}
                   <td className="p-6">
-                    <img
-                      src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${product.pImages?.[0]}`}
-                      alt={product.pName}
-                      className="w-20 h-20 object-cover rounded-2xl"
-                    />
+                   
+<img
+  src={
+    product.pImages?.[0]?.startsWith("http")
+      ? product.pImages[0]
+      : `https://modern-shop-backend-hfi9.onrender.com/uploads/products/${product.pImages?.[0] || "default.png"}`
+  }
+  alt={product.pName}
+  className="w-20 h-20 object-cover rounded-2xl"
+/>
+
                   </td>
 
                   {/* NAME */}

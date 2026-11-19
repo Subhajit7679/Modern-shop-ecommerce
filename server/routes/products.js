@@ -1,21 +1,27 @@
+
 const express = require("express");
 const router = express.Router();
-
 const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
+const cloudinary = require("../config/cloudinary");
 const productController = require("../controller/products");
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "public/uploads/products");
-  },
-
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "_" + file.originalname);
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "modern-shop/products",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation: [{ quality: "auto", fetch_format: "auto" }],
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
 
 /* GET ALL PRODUCTS */
 router.get("/all-product", productController.getAllProduct);
@@ -23,21 +29,22 @@ router.get("/all-product", productController.getAllProduct);
 /* GET SINGLE PRODUCT */
 router.get("/single-product/:id", async (req, res) => {
   req.body.pId = req.params.id;
-
   return productController.getSingleProduct(req, res);
 });
 
 /* ADD PRODUCT */
+
 router.post(
   "/add-product",
   upload.array("pImages", 5),
-  productController.postAddProduct,
+  productController.postAddProduct
 );
 
-router.get(
-  "/product-count",
-  productController.productCount
-);
+
+
+
+/* PRODUCT COUNT */
+router.get("/product-count", productController.productCount);
 
 /* EDIT PRODUCT */
 router.put(
@@ -45,41 +52,29 @@ router.put(
   upload.array("pImages", 2),
   async (req, res) => {
     req.body.pId = req.params.id;
-
     return productController.postEditProduct(req, res);
-  },
+  }
 );
 
 /* DELETE PRODUCT */
 router.delete("/delete-product/:id", async (req, res) => {
   req.body.pId = req.params.id;
-
   return productController.getDeleteProduct(req, res);
 });
 
+/* FILTER PRODUCTS */
+router.post("/filter-products", productController.filterProducts);
 
-router.post(
-  "/filter-products",
-  productController.filterProducts
-);
+/* PAGINATION */
+router.get("/paginate-products", productController.paginateProducts);
 
+/* RELATED PRODUCTS */
+router.get("/related-products", productController.relatedProducts);
 
+/* ADD REVIEW */
+router.post("/add-review", productController.addReview);
 
-router.get(
-  "/paginate-products",
-  productController.paginateProducts
-);
-
-router.get(
-  "/related-products",
-  productController.relatedProducts
-);
-
-router.post(
-  "/add-review",
-  productController.addReview
-);
-
+/* SEARCH */
 router.get("/search", productController.searchProduct);
 
 module.exports = router;

@@ -213,11 +213,17 @@ function Shop() {
                 >
                   <Link to={`/product/${product._id}`}>
                     <div className="relative overflow-hidden">
-                      <img
-                        src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${product.pImages?.[0]}`}
-                        alt={product.pName}
-                        className="  w-full h-72 object-cover group-hover:scale-110 transition-all duration-700  "
-                      />
+                      
+<img
+  src={
+    product.pImages?.[0]?.startsWith("http")
+      ? product.pImages[0]
+      : `https://modern-shop-backend-hfi9.onrender.com/uploads/products/${product.pImages?.[0] || "default.png"}`
+  }
+  alt={product.pName}
+  className="w-full h-72 object-cover group-hover:scale-110 transition-all duration-700"
+/>
+
 
                       {/* OUT OF STOCK */}
                       {isOutOfStock && (

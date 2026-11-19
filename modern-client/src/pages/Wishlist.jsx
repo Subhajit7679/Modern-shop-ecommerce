@@ -4,6 +4,19 @@ import { WishlistContext } from "../context/WishlistContext";
 
 import { CartContext } from "../context/CartContext";
 
+const PRODUCT_IMAGE_BASE =
+  "https://modern-shop-backend-hfi9.onrender.com/uploads/products/";
+
+const getProductImageUrl = (image) => {
+  if (!image) {
+    return "https://placehold.co/600x600?text=No+Image";
+  }
+
+  return image.startsWith("http")
+    ? image
+    : `${PRODUCT_IMAGE_BASE}${image}`;
+};
+
 function Wishlist() {
   const { wishlist, removeFromWishlist } = useContext(WishlistContext);
 
@@ -29,8 +42,8 @@ function Wishlist() {
                 className="bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-800"
               >
                 <img
-                  src={`https://modern-shop-backend-hfi9.onrender.com/uploads/products/${product.pImages?.[0]}`}
-                  alt={product.pName}
+                  src={getProductImageUrl(product.pImages?.[0])}
+                   alt={product.pName}
                   className="w-full h-72 object-cover"
                 />
 
