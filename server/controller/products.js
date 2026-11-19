@@ -47,34 +47,80 @@ static async deleteImages(images = []) {
 }
 
   
+
 async postAddProduct(req, res) {
   try {
+    console.log("ADD PRODUCT REQUEST RECEIVED");
+    console.log("Product fields:", {
+      pName: req.body?.pName,
+      pPrice: req.body?.pPrice,
+      pCategory: req.body?.pCategory,
+      pGender: req.body?.pGender,
+      pSizes: req.body?.pSizes,
+      uploadedFiles: req.files?.length || 0,
+    });
+
     const {
       pName,
       pDescription,
       pPrice,
       pCategory,
       pGender,
-    } = req.body;
+      pSizes,
+    } = req.body || {};
 
-    // Save Cloudinary image URLs
-    const pImages = req.files?.length
-      ? req.files.map((file) => file.path)
-      : ["default.png"];
-
-    if (!pName || !pDescription || !pPrice || !pCategory) {
-      return res.json({
-        error: "All fields required",
+    // Validate required fields
+    if (
+      !pName?.trim() ||
+      !pDescription?.trim() ||
+      pPrice === undefined ||
+      pPrice === "" ||
+      !pCategory
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Product name, description, price and category are required",
       });
     }
 
+    // Parse sizes safely
+    let parsedSizes;
+
+    try {
+      parsedSizes = typeof pSizes === "string"
+        ? JSON.parse(pSizes)
+        : pSizes;
+    } catch (parseError) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid product sizes format",
+      });
+    }
+
+    if (!Array.isArray(parsedSizes) || parsedSizes.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Please add at least one product size and stock quantity",
+      });
+    }
+
+    // Get uploaded Cloudinary image URLs
+    const uploadedImages = (req.files || [])
+      .map((file) => file.path || file.secure_url)
+      .filter(Boolean);
+
+    const pImages = uploadedImages.length > 0
+      ? uploadedImages
+      : ["default.png"];
+
+    // Create product
     const newProduct = new productModel({
-      pName,
-      pDescription,
-      pPrice,
+      pName: pName.trim(),
+      pDescription: pDescription.trim(),
+      pPrice: Number(pPrice),
       pCategory,
       pGender,
-      pSizes: JSON.parse(req.body.pSizes),
+      pSizes: parsedSizes,
       pOffer: "No",
       pStatus: "Active",
       pImages,
@@ -82,19 +128,28 @@ async postAddProduct(req, res) {
 
     await newProduct.save();
 
-    return res.json({
-      success: "Product created successfully",
-    });
-  } catch (err) {
-  console.error("ADD PRODUCT ERROR:", err);
-  console.error("Error message:", err?.message);
-  console.error("Cloudinary details:", err?.error);
+    console.log("PRODUCT CREATED SUCCESSFULLY:", newProduct._id);
 
-  return res.status(500).json({
-    error: err?.message || "Product save failed",
-  });
+    return res.status(201).json({
+      success: "Product created successfully",
+      product: newProduct,
+    });
+
+  } catch (err) {
+    console.error("========== ADD PRODUCT FAILED ==========");
+    console.error("Error name:", err?.name);
+    console.error("Error message:", err?.message);
+    console.error("Error details:", JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
+    console.error("Error stack:", err?.stack);
+    console.error("========================================");
+
+    return res.status(500).json({
+      success: false,
+      error: err?.message || "Add Product Failed",
+    });
+  }
 }
-}
+
 
 
   async getAllProduct(req, res) {
